@@ -1,0 +1,24 @@
+{
+  "name": "AutoPulse",
+  "short_name": "AutoPulse",
+  "description": "Smart vehicle management platform",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0b0f1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "LOGOFINAL.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "LOGOFINAL.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
