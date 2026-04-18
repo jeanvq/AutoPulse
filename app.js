@@ -1,13 +1,29 @@
 // ==========================================
 // AutoPulse — app.js
 // ==========================================
+// Auth guard
+const currentUser = localStorage.getItem('autopulse_user');
+if (!currentUser) {
+  window.location.href = 'auth.html';
+}
+const user = JSON.parse(currentUser);
 
+
+// Actualizar avatar con nombre real
+document.getElementById('topbar-avatar').src = 
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=cccccc&color=222222&rounded=true&size=40`;
+
+// Logout
+function handleLogout() {
+  localStorage.removeItem('autopulse_user');
+  window.location.href = 'auth.html';
+}
 // ---- STORAGE ----
 const STORAGE_KEY = 'autopulse_data';
 
 const DEFAULT_DATA = {
   settings: {
-    ownerName: 'Jeancarlo',
+    ownerName: user.name,
     units: 'km',
     currency: 'USD',
     symbol: '$'
@@ -341,48 +357,58 @@ function renderDashboard() {
   }
 }
 
+
 // ---- MY VEHICLES ----
-function renderMyVehicles() {
+async function renderMyVehicles() {
   const container = document.getElementById('vehicles-list-dynamic');
   if (!container) return;
 
-  if (DB.vehicles.length === 0) {
-    container.innerHTML = emptyState('🚗', 'No vehicles yet', 'Add your first vehicle to start tracking fuel and maintenance.', 'openAddVehicleModal()', '+ Add Vehicle');
-    return;
-  }
+  try {
+    const response = await fetch(`api/get_vehicles.php?user_id=${user.id}`);
+    const data = await response.json();
 
-  container.innerHTML = DB.vehicles.map(v => `
-    <div class="vehicle-card-large">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-        <div class="vehicle-title">${v.name}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn ghost" style="padding:6px 14px;font-size:0.85rem;" onclick="editVehicle('${v.id}')">Edit</button>
-          <button class="btn ghost" style="padding:6px 14px;font-size:0.85rem;border-color:#e74c3c;color:#e74c3c;" onclick="confirmDeleteVehicle('${v.id}')">Delete</button>
+    if (!data.success || data.vehicles.length === 0) {
+      container.innerHTML = emptyState('🚗', 'No vehicles yet', 'Add your first vehicle to start tracking fuel and maintenance.', 'openAddVehicleModal()', '+ Add Vehicle');
+      return;
+    }
+
+    container.innerHTML = data.vehicles.map(v => `
+      <div class="vehicle-card-large">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div class="vehicle-title">${v.make} ${v.model}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn ghost" style="padding:6px 14px;font-size:0.85rem;" onclick="editVehicle('${v.id}')">Edit</button>
+            <button class="btn ghost" style="padding:6px 14px;font-size:0.85rem;border-color:#e74c3c;color:#e74c3c;" onclick="confirmDeleteVehicle('${v.id}')">Delete</button>
+          </div>
         </div>
-      </div>
-      <div class="vehicle-meta-clean">
-        <span><strong>Model:</strong> ${v.model}</span>
-        <span><strong>Year:</strong> ${v.year}</span>
-        <span><strong>Trim:</strong> ${v.trim}</span>
-        <span><strong>Color:</strong> ${v.color}</span>
-        <span><strong>Purchase Year:</strong> ${v.purchaseYear}</span>
-        <span><strong>Mileage:</strong> ${fmtDist(v.mileage)}</span>
-        <span><strong>Plate:</strong> ${v.plate}</span>
-        <span><strong>Status:</strong>
-          <span style="color:${v.status === 'Healthy' ? 'var(--accent)' : '#e74c3c'}">${v.status}</span>
-        </span>
-      </div>
-      <div style="margin-top:16px;">
-        <img src="${typeToImage(v.type)}" alt="${v.name}"
-             style="width:100%;max-width:380px;max-height:180px;border-radius:14px;object-fit:cover;" />
-      </div>
-      <div style="margin-top:14px;">
-        ${DB.data.activeVehicleId === v.id
-          ? `<span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">Active vehicle</span>`
-          : `<button class="btn ghost" style="padding:6px 16px;font-size:0.83rem;" onclick="setActiveVehicle('${v.id}')">Set as active</button>`
-        }
-      </div>
-    </div>`).join('');
+        <div class="vehicle-meta-clean">
+          <span><strong>Model:</strong> ${v.model}</span>
+          <span><strong>Year:</strong> ${v.year}</span>
+          <span><strong>Trim:</strong> ${v.trim || '—'}</span>
+          <span><strong>Color:</strong> ${v.color || '—'}</span>
+          <span><strong>Mileage:</strong> ${v.mileage ? v.mileage + ' km' : '—'}</span>
+          <span><strong>Category:</strong> ${v.category || '—'}</span>
+          <span><strong>Status:</strong>
+            <span style="color:var(--accent)">Active</span>
+          </span>
+        </div>
+        <div style="margin-top:16px;">
+          <img src="${typeToImage(v.category)}" alt="${v.make} ${v.model}"
+               style="width:100%;max-width:380px;max-height:180px;border-radius:14px;object-fit:cover;" />
+        </div>
+        <div style="margin-top:14px;">
+          <span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">Active vehicle</span>
+        </div>
+      </div>`).join('');
+
+ // Guardar primer vehículo como activo
+    if (data.vehicles.length > 0) {
+      window.activeVehicle = data.vehicles[0];
+    }
+
+  } catch (error) {
+    container.innerHTML = '<p style="color:var(--muted)">❌ Error loading vehicles.</p>';
+  }
 }
 
 function setActiveVehicle(id) {
@@ -391,15 +417,32 @@ function setActiveVehicle(id) {
   showNotification('Active vehicle updated');
 }
 
-function confirmDeleteVehicle(id) {
-  const v = DB.vehicles.find(v => v.id === id);
-  if (!v) return;
-  if (confirm(`Delete "${v.name}"? This also removes all its fuel and maintenance records.`)) {
-    DB.deleteVehicle(id);
-    renderMyVehicles();
-    showNotification('Vehicle deleted');
+async function confirmDeleteVehicle(id) {
+  if (!confirm('Delete this vehicle? This also removes all its fuel and maintenance records.')) return;
+
+  try {
+    const response = await fetch('api/delete_vehicle.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vehicle_id: id,
+        user_id: user.id
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showNotification('Vehicle deleted');
+      renderMyVehicles();
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
   }
 }
+
 
 function openAddVehicleModal() {
   document.getElementById('vehicle-form').reset();
@@ -426,81 +469,102 @@ function editVehicle(id) {
   openModal('add-vehicle-modal');
 }
 
-function saveVehicle(e) {
+
+async function saveVehicle(e) {
   e.preventDefault();
-  const id   = document.getElementById('vehicle-form-id').value;
-  const data = {
-    name:         document.getElementById('vf-name').value,
-    model:        document.getElementById('vf-model').value,
-    year:         parseInt(document.getElementById('vf-year').value),
-    trim:         document.getElementById('vf-trim').value,
-    color:        document.getElementById('vf-color').value,
-    purchaseYear: parseInt(document.getElementById('vf-purchase-year').value),
-    mileage:      parseFloat(document.getElementById('vf-mileage').value),
-    plate:        document.getElementById('vf-plate').value.toUpperCase(),
-    type:         document.getElementById('vf-type').value,
-    status:       document.getElementById('vf-status').value
-  };
+  const id = document.getElementById('vehicle-form-id').value;
 
-  if (id) {
-    DB.updateVehicle(id, data);
-    showNotification('Vehicle updated');
-  } else {
-    DB.addVehicle(data);
-    showNotification('Vehicle added');
+  const vin      = document.getElementById('vf-vin').value.trim().toUpperCase();
+  const name     = document.getElementById('vf-name').value;
+  const model    = document.getElementById('vf-model').value;
+  const year     = parseInt(document.getElementById('vf-year').value);
+  const trim     = document.getElementById('vf-trim').value;
+  const color    = document.getElementById('vf-color').value;
+  const mileage  = parseFloat(document.getElementById('vf-mileage').value);
+  const category = document.getElementById('vf-type').value;
+  const make     = name.split(' ')[0];
+
+  try {
+    const response = await fetch('api/add_vehicle.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id,
+        vin, make, model, year, trim, color, mileage, category,
+        description: ''
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showNotification('Vehicle saved successfully!');
+      closeModal('add-vehicle-modal');
+      renderMyVehicles();
+      renderDashboard();
+      updateMaintenanceBadge();
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
   }
-
-  closeModal('add-vehicle-modal');
-  renderMyVehicles();
-  renderDashboard();
-  updateMaintenanceBadge();
 }
 
 // ---- FUEL RECORDS ----
-function renderFuel() {
-  const v = DB.getActiveVehicle();
+async function renderFuel() {
+  const v = window.activeVehicle;
   if (!v) return;
 
-  const records = DB.getFuelForVehicle(v.id);
-  const s       = DB.settings;
+  const s = DB.settings;
+  setText('fuel-vehicle-title', `${v.make} ${v.model} ${v.year}`);
 
-  setText('fuel-vehicle-title', `${v.name} ${v.year}`);
+  try {
+    const response = await fetch(`api/get_fuel.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const data = await response.json();
 
-  const now     = new Date();
-  const month   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const monthly = records.filter(r => r.date.startsWith(month));
-  const totalCost = monthly.reduce((sum, r) => sum + r.cost, 0);
-  const avgCons   = records.length ? records.reduce((sum, r) => sum + r.consumption, 0) / records.length : 0;
-  const best      = records.length ? Math.min(...records.map(r => r.consumption)) : 0;
-  const bestRec   = records.find(r => r.consumption === best);
+    if (!data.success) return;
+    const records = data.records;
 
-  setText('fuel-total-cost',       fmt(totalCost));
-  setText('fuel-count',            `${monthly.length} fuel-up${monthly.length !== 1 ? 's' : ''}`);
-  setText('fuel-avg-consumption',  `${avgCons.toFixed(1)} L/100${s.units}`);
-  setText('fuel-best-eff',         `${best.toFixed(1)} L/100${s.units}`);
-  if (bestRec) {
-    const d = new Date(bestRec.date);
-    setText('fuel-best-eff-date', d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-  }
+    const now     = new Date();
+    const month   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthly = records.filter(r => r.date.startsWith(month));
+    const totalCost = monthly.reduce((sum, r) => sum + parseFloat(r.cost), 0);
+    const avgCons   = records.length ? records.reduce((sum, r) => sum + (r.km > 0 ? (parseFloat(r.amount) / parseFloat(r.km)) * 100 : 0), 0) / records.length : 0;
+    const best      = records.length ? Math.min(...records.map(r => r.km > 0 ? (parseFloat(r.amount) / parseFloat(r.km)) * 100 : 0)) : 0;
+    const bestRec   = records.find(r => r.km > 0 && (parseFloat(r.amount) / parseFloat(r.km)) * 100 === best);
 
-  const tbody = document.getElementById('fuel-table-body');
-  if (tbody) {
-    tbody.innerHTML = records.length
-      ? records.map(r => `
-          <tr>
-            <td>${r.date}</td>
-            <td>${r.amount.toFixed(1)} L</td>
-            <td>${fmt(r.cost)}</td>
-            <td>${fmtDist(r.odometer)}</td>
-            <td>${r.station}</td>
-            <td>${r.consumption.toFixed(2)} L/100${DB.settings.units}</td>
-            <td>
-              <button class="btn ghost"
-                style="padding:4px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;"
-                onclick="deleteFuelRecord('${r.id}')">Delete</button>
-            </td>
-          </tr>`).join('')
-      : `<tr><td colspan="7">${emptyState('⛽', 'No fuel records yet', 'Add your first fill-up using the button above.', 'openAddFuelModal()', '+ Add Record')}</td></tr>`;
+    setText('fuel-total-cost',      `$${totalCost.toFixed(2)}`);
+    setText('fuel-count',           `${monthly.length} fuel-up${monthly.length !== 1 ? 's' : ''}`);
+    setText('fuel-avg-consumption', `${avgCons.toFixed(1)} L/100${s.units}`);
+    setText('fuel-best-eff',        `${best.toFixed(1)} L/100${s.units}`);
+    if (bestRec) {
+      const d = new Date(bestRec.date);
+      setText('fuel-best-eff-date', d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+    }
+
+    const tbody = document.getElementById('fuel-table-body');
+    if (tbody) {
+      tbody.innerHTML = records.length
+        ? records.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${parseFloat(r.amount).toFixed(1)} L</td>
+              <td>$${parseFloat(r.cost).toFixed(2)}</td>
+              <td>${r.odometer ? r.odometer + ' km' : '—'}</td>
+              <td>${r.station || '—'}</td>
+              <td>${r.km > 0 ? ((parseFloat(r.amount) / parseFloat(r.km)) * 100).toFixed(2) : '—'} L/100${s.units}</td>
+              <td>
+                <button class="btn ghost"
+                  style="padding:4px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;"
+                  onclick="deleteFuelRecord('${r.id}')">Delete</button>
+              </td>
+            </tr>`).join('')
+        : `<tr><td colspan="7">${emptyState('⛽', 'No fuel records yet', 'Add your first fill-up using the button above.', 'openAddFuelModal()', '+ Add Record')}</td></tr>`;
+    }
+
+  } catch (error) {
+    console.error('Error loading fuel records:', error);
   }
 }
 
@@ -510,10 +574,13 @@ function openAddFuelModal() {
   openModal('add-fuel-modal');
 }
 
-function saveFuelRecord(e) {
+async function saveFuelRecord(e) {
   e.preventDefault();
-  const v      = DB.getActiveVehicle();
-  if (!v) return;
+  const v = window.activeVehicle;
+  if (!v) {
+    alert('Please select an active vehicle first.');
+    return;
+  }
 
   const amount    = parseFloat(document.getElementById('af-amount').value);
   const km        = parseFloat(document.getElementById('af-km').value);
@@ -521,13 +588,31 @@ function saveFuelRecord(e) {
   const odometer  = parseFloat(document.getElementById('af-odometer').value);
   const station   = document.getElementById('af-station').value;
   const date      = document.getElementById('af-date').value;
-  const consumption = km > 0 ? parseFloat(((amount / km) * 100).toFixed(2)) : 0;
 
-  DB.addFuelRecord({ vehicleId: v.id, date, amount, cost, odometer, station, consumption });
-  closeModal('add-fuel-modal');
-  renderFuel();
-  renderDashboard();
-  showNotification('Fuel record added');
+  try {
+    const response = await fetch('api/add_fuel.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vehicle_id: v.id,
+        user_id: user.id,
+        date, amount, cost, km, odometer, station
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      closeModal('add-fuel-modal');
+      renderFuel();
+      renderDashboard();
+      showNotification('Fuel record added');
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
+  }
 }
 
 function deleteFuelRecord(id) {
@@ -940,3 +1025,75 @@ document.addEventListener('DOMContentLoaded', function () {
   showSection(SECTIONS.includes(saved) ? saved : 'dashboard');
   updateMaintenanceBadge();
 });
+// ==========================================
+// VIN LOOKUP — NHTSA API
+// ==========================================
+async function lookupVIN() {
+  const vin = document.getElementById('vf-vin').value.trim().toUpperCase();
+  const msgDiv = document.getElementById('vin-message');
+  const btn = document.getElementById('vin-lookup-btn');
+
+  // Validar que el VIN tenga 17 caracteres
+  if (vin.length !== 17) {
+    msgDiv.style.display = 'block';
+    msgDiv.className = 'auth-message error';
+    msgDiv.textContent = '⚠️ VIN must be exactly 17 characters.';
+    return;
+  }
+
+  // Mostrar loading
+  btn.textContent = '⏳ Looking up...';
+  btn.disabled = true;
+  msgDiv.style.display = 'none';
+
+  try {
+    const response = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`
+    );
+    const data = await response.json();
+    const results = data.Results;
+
+    // Funcion helper para extraer valores
+    const getValue = (variable) => {
+      const found = results.find(r => r.Variable === variable);
+      return found && found.Value && found.Value !== 'Not Applicable' ? found.Value : '';
+    };
+
+    const make  = getValue('Make');
+    const model = getValue('Model');
+    const year  = getValue('Model Year');
+    const trim  = getValue('Trim');
+    const engine = getValue('Displacement (L)') 
+                   ? `${getValue('Displacement (L)')}L ${getValue('Engine Configuration')}` 
+                   : '';
+    const fuelType     = getValue('Fuel Type - Primary');
+    const transmission = getValue('Transmission Style');
+
+    // Verificar que encontró datos
+    if (!make && !model) {
+      msgDiv.style.display = 'block';
+      msgDiv.className = 'auth-message error';
+      msgDiv.textContent = '❌ VIN not found. Please check and try again.';
+      return;
+    }
+
+    // Llenar el formulario automáticamente
+    document.getElementById('vf-name').value  = `${make} ${model}`;
+    document.getElementById('vf-model').value = model;
+    document.getElementById('vf-year').value  = year;
+    document.getElementById('vf-trim').value  = trim;
+
+    // Mostrar éxito
+    msgDiv.style.display = 'block';
+    msgDiv.className = 'auth-message success';
+    msgDiv.textContent = `✅ Found: ${year} ${make} ${model}`;
+
+  } catch (error) {
+    msgDiv.style.display = 'block';
+    msgDiv.className = 'auth-message error';
+    msgDiv.textContent = '❌ Connection error. Please try again.';
+  } finally {
+    btn.textContent = '🔍 Lookup VIN';
+    btn.disabled = false;
+  }
+}
