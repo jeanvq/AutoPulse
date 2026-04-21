@@ -36,7 +36,10 @@
         </div>
         <div class="form-group">
           <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="••••••••" required />
+          <div class="password-wrapper">
+            <input type="password" id="login-password" placeholder="••••••••" required />
+            <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)" aria-label="Show password">👁️</button>
+          </div>
         </div>
         <div id="login-error" class="auth-message error" style="display:none;"></div>
         <button class="btn primary auth-btn" onclick="handleLogin()">Sign In</button>
@@ -54,7 +57,10 @@
         </div>
         <div class="form-group">
           <label for="signup-password">Password</label>
-          <input type="password" id="signup-password" placeholder="Min. 6 characters" required />
+          <div class="password-wrapper">
+            <input type="password" id="signup-password" placeholder="Min. 6 characters" required />
+            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', this)" aria-label="Show password">👁️</button>
+          </div>
         </div>
         <div id="signup-error" class="auth-message error" style="display:none;"></div>
         <div id="signup-success" class="auth-message success" style="display:none;"></div>
