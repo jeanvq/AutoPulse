@@ -2,16 +2,15 @@
 header("Content-Type: application/json");
 
 $host     = getenv('MYSQLHOST');
-$dbname   = getenv('DB_NAME');
+$dbname   = "railway";
 $username = getenv('MYSQLUSER');
 $password = getenv('MYSQLPASSWORD');
 $port     = getenv('MYSQLPORT') ?: 3306;
 
-echo json_encode([
-    "host"     => $host,
-    "dbname"   => $dbname,
-    "username" => $username,
-    "port"     => $port,
-    "password" => $password ? "SET" : "NOT SET"
-]);
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $username, $password);
+    echo json_encode(["success" => true, "message" => "Connected!"]);
+} catch (PDOException $e) {
+    echo json_encode(["error" => $e->getMessage()]);
+}
 ?>
