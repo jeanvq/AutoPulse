@@ -1,12 +1,10 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
-RUN a2dismod mpm_event && \
-    a2enmod mpm_prefork && \
-    a2enmod rewrite && \
-    docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql
 
-COPY . /var/www/html/
+WORKDIR /app
+COPY . /app
 
-RUN chown -R www-data:www-data /var/www/html
+EXPOSE 8080
 
-EXPOSE 80
+CMD ["php", "-S", "0.0.0.0:8080"]
