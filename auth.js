@@ -47,7 +47,7 @@ async function handleSignup() {
       successDiv.style.display = 'block';
       setTimeout(() => switchTab('login'), 2000);
     } else {
-      errorDiv.textContent = data.message;
+      errorDiv.textContent = data.message || data.error || 'An error occurred';
       errorDiv.style.display = 'block';
     }
   } catch (error) {
@@ -82,7 +82,7 @@ async function handleLogin() {
       localStorage.setItem('autopulse_user', JSON.stringify(data.user));
       window.location.href = 'index.html';
     } else {
-      errorDiv.textContent = data.message;
+      errorDiv.textContent = data.message || data.error || 'An error occurred';
       errorDiv.style.display = 'block';
     }
   } catch (error) {
