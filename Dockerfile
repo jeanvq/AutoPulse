@@ -1,12 +1,12 @@
 FROM php:8.2-apache
 
-# Habilitar mod_rewrite
-RUN a2enmod rewrite
+RUN a2dismod mpm_event && \
+    a2enmod mpm_prefork && \
+    a2enmod rewrite && \
+    docker-php-ext-install pdo pdo_mysql
 
-# Copiar archivos del proyecto
 COPY . /var/www/html/
 
-# Permisos
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
