@@ -942,17 +942,33 @@ function initSearch() {
 }
 
 // ---- MODAL HELPERS ----
-function openModal(id)  { document.getElementById(id)?.classList.add('active'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+function openModal(id) { 
+  document.getElementById(id)?.classList.add('active'); 
+  document.body.classList.add('modal-open');
+}
+
+function closeModal(id) { 
+  document.getElementById(id)?.classList.remove('active'); 
+  if (!document.querySelectorAll('.modal-bg.active').length) {
+    document.body.classList.remove('modal-open');
+  }
+}
 
 function initModals() {
   // Close when clicking the backdrop
   document.querySelectorAll('.modal-bg').forEach(modal => {
-    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+    modal.addEventListener('click', e => { 
+      if (e.target === modal) {
+        closeModal(modal.id);
+      } 
+    });
   });
   // Close buttons
   document.querySelectorAll('.modal-close').forEach(btn => {
-    btn.addEventListener('click', () => btn.closest('.modal-bg')?.classList.remove('active'));
+    btn.addEventListener('click', () => {
+      const modal = btn.closest('.modal-bg');
+      if (modal) closeModal(modal.id);
+    });
   });
 }
 

@@ -377,6 +377,7 @@ body.light-mode .vehicle-visual-clean img {
   justify-content: center;
   padding: 16px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 .modal-bg.active { display: flex; }
 
@@ -391,6 +392,11 @@ body.light-mode .vehicle-visual-clean img {
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
+  margin: auto;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .modal-close {
