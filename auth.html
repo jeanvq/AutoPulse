@@ -38,7 +38,9 @@
           <label for="login-password">Password</label>
           <div class="password-wrapper">
             <input type="password" id="login-password" placeholder="••••••••" required />
-            <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)" aria-label="Show password">👁️</button>
+            <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
           </div>
         </div>
         <div id="login-error" class="auth-message error" style="display:none;"></div>
@@ -59,7 +61,9 @@
           <label for="signup-password">Password</label>
           <div class="password-wrapper">
             <input type="password" id="signup-password" placeholder="Min. 6 characters" required />
-            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', this)" aria-label="Show password">👁️</button>
+            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', this)" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
           </div>
         </div>
         <div id="signup-error" class="auth-message error" style="display:none;"></div>
