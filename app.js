@@ -235,6 +235,15 @@ function updateTopbar() {
     avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5b7cfd&color=ffffff&rounded=true&size=40`;
     avatar.alt = name;
   }
+
+  // Update mobile nav elements
+  const mobileUser = document.getElementById('mobile-username');
+  if (mobileUser) mobileUser.textContent = name;
+  const mobileAvatar = document.getElementById('mobile-avatar');
+  if (mobileAvatar) {
+    mobileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5b7cfd&color=ffffff&rounded=true&size=50`;
+    mobileAvatar.alt = name;
+  }
 }
 
 // ---- MAINTENANCE BADGE ----
@@ -257,6 +266,8 @@ function setTheme(mode) {
   document.body.classList.toggle('light-mode', mode === 'light');
   const icon = document.getElementById('theme-icon');
   if (icon) icon.textContent = mode === 'light' ? '☀️' : '🌙';
+  const mobileIcon = document.getElementById('mobile-theme-icon');
+  if (mobileIcon) mobileIcon.textContent = mode === 'light' ? '☀️' : '🌙';
   localStorage.setItem('themeMode', mode);
 }
 
@@ -918,12 +929,14 @@ function resetAllData() {
 
 // ---- SEARCH ----
 function initSearch() {
-  const input = document.querySelector('.search input');
-  if (!input) return;
-  input.addEventListener('input', function () {
-    const val = this.value.toLowerCase().trim();
-    document.querySelectorAll('.record-card, .vehicle-card-large').forEach(card => {
-      card.style.display = !val || card.textContent.toLowerCase().includes(val) ? '' : 'none';
+  const inputs = document.querySelectorAll('.search input');
+  if (!inputs.length) return;
+  inputs.forEach(input => {
+    input.addEventListener('input', function () {
+      const val = this.value.toLowerCase().trim();
+      document.querySelectorAll('.record-card, .vehicle-card-large').forEach(card => {
+        card.style.display = !val || card.textContent.toLowerCase().includes(val) ? '' : 'none';
+      });
     });
   });
 }
@@ -983,6 +996,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('theme-toggle')?.addEventListener('click', () => {
     setTheme(document.body.classList.contains('light-mode') ? 'dark' : 'light');
+  });
+  document.getElementById('mobile-theme-toggle')?.addEventListener('click', () => {
+    setTheme(document.body.classList.contains('light-mode') ? 'dark' : 'light');
+    document.getElementById('mobile-nav').style.display = 'none';
   });
 
   updateTopbar();

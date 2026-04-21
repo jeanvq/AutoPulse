@@ -50,6 +50,9 @@
 
         <!-- TOP BAR -->
         <div class="topbar">
+          <div class="mobile-brand" style="display:none;align-items:center;gap:12px;font-weight:900;font-size:1.6rem;color:var(--accent);letter-spacing:-0.5px;">
+            <img src="LOGOFINAL.png" alt="AutoPulse" style="width:56px;height:56px;border-radius:50%;box-shadow:0 2px 8px rgba(25,195,255,0.3);" /> AutoPulse
+          </div>
           <div class="topbar-spacer"></div>
           <div class="topbar-actions">
             <button id="theme-toggle" class="icon-button" aria-label="Toggle theme" style="margin-right:18px;">
@@ -63,6 +66,11 @@
               <span class="bell">🔔</span>
               <span class="badge-dot"></span>
             </button>
+            
+            <button class="hamburger" id="hamburger-menu" aria-label="Open menu" style="display:none;">
+              <span></span><span></span><span></span>
+            </button>
+            
             <div class="owner">
   <div>
     <p id="topbar-username">User</p>
@@ -88,7 +96,7 @@
           <div class="vehicle-header">
             <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;">
               <div class="dashboard-divider"
-                   style="position:absolute;top:-32px;left:0;width:100vw;height:32px;
+                   style="position:absolute;top:-32px;left:0;width:100%;height:32px;
                           background:linear-gradient(90deg,var(--bg-soft),var(--accent),var(--bg-soft));
                           opacity:0.18;border-radius:8px;"></div>
               <h1>Dashboard</h1>
@@ -141,15 +149,17 @@
             <div class="modal-card">
               <button class="modal-close">&times;</button>
               <h2 style="margin-top:0;">Fuel Records</h2>
-              <table class="modal-table">
-                <thead>
-                  <tr>
-                    <th>Date</th><th>Amount</th><th>Cost</th>
-                    <th>Odometer</th><th>Station</th><th>Consumption</th>
-                  </tr>
-                </thead>
-                <tbody id="dash-fuel-preview"></tbody>
-              </table>
+              <div style="overflow-x:auto; width: 100%;">
+                <table class="modal-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th><th>Amount</th><th>Cost</th>
+                      <th>Odometer</th><th>Station</th><th>Consumption</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dash-fuel-preview"></tbody>
+                </table>
+              </div>
               <div style="margin-top:14px;">
                 <a href="#" data-section="fuel"
                    style="color:var(--accent);font-weight:600;font-size:0.95rem;">
@@ -210,14 +220,16 @@
             <div class="modal-card" style="max-width:680px;">
               <button class="modal-close">&times;</button>
               <h2 style="margin-top:0;">Maintenance Records</h2>
-              <table class="modal-table">
-                <thead>
-                  <tr>
-                    <th>Date</th><th>Type</th><th>Price</th><th>Next Date</th><th></th>
-                  </tr>
-                </thead>
-                <tbody id="maint-table-body"></tbody>
-              </table>
+              <div style="overflow-x:auto; width: 100%;">
+                <table class="modal-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th><th>Type</th><th>Price</th><th>Next Date</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="maint-table-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
@@ -430,8 +442,8 @@
 <input type="hidden" id="vehicle-form-id" />
 
 <!-- VIN Lookup -->
-<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:20px;">
-  <div class="form-group" style="flex:1;margin:0;">
+<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;">
+  <div class="form-group" style="flex:1;margin:0;min-width:200px;">
     <label for="vf-vin">VIN Number</label>
     <input id="vf-vin" type="text" maxlength="17" placeholder="Enter 17-digit VIN" 
            style="text-transform:uppercase;" />
@@ -580,21 +592,35 @@
       </div>
     </div>
 
-    <!-- ========== HAMBURGER & MOBILE NAV ========== -->
-    <button class="hamburger" id="hamburger-menu" aria-label="Open menu" style="display:none;">
-      <span></span><span></span><span></span>
-    </button>
+    <!-- ========== MOBILE NAV ========== -->
 
     <nav class="mobile-nav" id="mobile-nav"
          style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
-                background:rgba(16,23,38,0.95);z-index:3500;
+                background:rgba(16,23,38,0.98);z-index:3500;
                 flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+      
+      <div class="mobile-owner" style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px;">
+        <img id="mobile-avatar" src="https://ui-avatars.com/api/?name=User&background=cccccc&color=222222&rounded=true&size=50" alt="Avatar" class="avatar" style="width:56px;height:56px;" />
+        <p id="mobile-username" style="font-weight:700;font-size:1.2rem;margin:0;">User</p>
+        <button onclick="handleLogout()" class="btn ghost" style="padding:4px 12px;font-size:0.8rem;margin-top:4px;">Logout</button>
+      </div>
+
       <a data-section="dashboard">Dashboard</a>
       <a data-section="my-vehicles">My vehicles</a>
       <a data-section="maintenance">Maintenance records</a>
       <a data-section="fuel">Fuel records</a>
       <a data-section="reports">Reports</a>
       <a data-section="settings">Settings</a>
+
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;align-items:center;width:80%;max-width:300px;">
+        <label class="search mobile-search" style="width:100%;justify-content:center;">
+          <span>🔍</span>
+          <input type="search" placeholder="Search..." style="width:100%;max-width:200px;" />
+        </label>
+        <button id="mobile-theme-toggle" class="btn ghost" style="width:100%;">
+          <span id="mobile-theme-icon">🌙</span> Toggle Theme
+        </button>
+      </div>
     </nav>
 
     <!-- ========== FOOTER ========== -->

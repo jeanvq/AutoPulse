@@ -1,8 +1,8 @@
 <?php
-$host     = getenv('MYSQLHOST');
-$dbname   = "railway";
-$username = getenv('MYSQLUSER');
-$password = getenv('MYSQLPASSWORD');
+$host     = getenv('MYSQLHOST') ?: '127.0.0.1';
+$dbname   = getenv('MYSQLDATABASE') ?: 'autopulse_db';
+$username = getenv('MYSQLUSER') ?: 'root';
+$password = getenv('MYSQLPASSWORD') ?: '';
 $port     = getenv('MYSQLPORT') ?: 3306;
 
 try {
