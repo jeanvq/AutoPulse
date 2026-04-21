@@ -1,8 +1,9 @@
 <?php
-$host = "localhost";
-$dbname = "autopulse_db";
-$username = "root";
-$password = "";
+$host = getenv ('mysql.railway.internal');
+$dbname = getenv ('railway');
+$username = getenv ('root');
+$password = getenv ('enMJGkLfEUqpngxVVqnrlRWuUPghFQcu');
+$port = getenv ('3306');
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
