@@ -476,19 +476,22 @@ async function saveVehicle(e) {
   const vin      = document.getElementById('vf-vin').value.trim().toUpperCase();
   const name     = document.getElementById('vf-name').value;
   const model    = document.getElementById('vf-model').value;
-  const year     = parseInt(document.getElementById('vf-year').value);
+  const year     = parseInt(document.getElementById('vf-year').value) || 0;
   const trim     = document.getElementById('vf-trim').value;
   const color    = document.getElementById('vf-color').value;
-  const mileage  = parseFloat(document.getElementById('vf-mileage').value);
+  const mileage  = parseFloat(document.getElementById('vf-mileage').value) || 0;
   const category = document.getElementById('vf-type').value;
   const make     = name.split(' ')[0];
 
+  const endpoint = id ? 'api/edit_vehicle.php' : 'api/add_vehicle.php';
+
   try {
-    const response = await fetch('api/add_vehicle.php', {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: user.id,
+        vehicle_id: id,
         vin, make, model, year, trim, color, mileage, category,
         description: ''
       })
@@ -582,10 +585,10 @@ async function saveFuelRecord(e) {
     return;
   }
 
-  const amount    = parseFloat(document.getElementById('af-amount').value);
-  const km        = parseFloat(document.getElementById('af-km').value);
-  const cost      = parseFloat(document.getElementById('af-cost').value);
-  const odometer  = parseFloat(document.getElementById('af-odometer').value);
+  const amount    = parseFloat(document.getElementById('af-amount').value) || 0;
+  const km        = parseFloat(document.getElementById('af-km').value) || 0;
+  const cost      = parseFloat(document.getElementById('af-cost').value) || 0;
+  const odometer  = parseFloat(document.getElementById('af-odometer').value) || 0;
   const station   = document.getElementById('af-station').value;
   const date      = document.getElementById('af-date').value;
 
@@ -718,7 +721,7 @@ function saveMaintenanceRecord(e) {
     vehicleId: v.id,
     date:      document.getElementById('mf-date').value,
     type:      document.getElementById('mf-type').value,
-    price:     parseFloat(document.getElementById('mf-price').value),
+    price:     parseFloat(document.getElementById('mf-price').value) || 0,
     notes:     document.getElementById('mf-notes').value,
     nextDate:  document.getElementById('mf-next-date').value || ''
   });
