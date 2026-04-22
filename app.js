@@ -28,34 +28,10 @@ const DEFAULT_DATA = {
     currency: 'USD',
     symbol: '$'
   },
-  activeVehicleId: 'v1',
-  vehicles: [
-    {
-      id: 'v1',
-      name: 'Toyota Corolla',
-      model: 'Corolla SE',
-      year: 2022,
-      trim: 'XLE',
-      purchaseYear: 2023,
-      mileage: 24580,
-      plate: 'AP-2026',
-      color: 'Silver',
-      type: 'sedan',
-      status: 'Healthy'
-    }
-  ],
-  fuelRecords: [
-    { id: 'f1', vehicleId: 'v1', date: '2026-01-30', amount: 38.2, cost: 42.15, odometer: 24500, station: 'Shell', consumption: 7.1 },
-    { id: 'f2', vehicleId: 'v1', date: '2026-01-21', amount: 34.0, cost: 36.90, odometer: 24180, station: 'BP',    consumption: 7.3 },
-    { id: 'f3', vehicleId: 'v1', date: '2026-01-14', amount: 41.0, cost: 45.80, odometer: 23900, station: 'Shell', consumption: 7.2 },
-    { id: 'f4', vehicleId: 'v1', date: '2026-01-05', amount: 36.5, cost: 39.50, odometer: 23600, station: 'BP',    consumption: 7.2 }
-  ],
-  maintenanceRecords: [
-    { id: 'm1', vehicleId: 'v1', date: '2026-03-09', type: 'Oil + filters',    price: 70, notes: 'Scheduled service', nextDate: '2026-06-09' },
-    { id: 'm2', vehicleId: 'v1', date: '2026-01-28', type: 'Oil change',       price: 65, notes: '',                  nextDate: '' },
-    { id: 'm3', vehicleId: 'v1', date: '2026-01-10', type: 'Brake inspection', price: 40, notes: '',                  nextDate: '' },
-    { id: 'm4', vehicleId: 'v1', date: '2025-12-22', type: 'Tire rotation',    price: 30, notes: '',                  nextDate: '2026-06-22' }
-  ]
+  activeVehicleId: null,
+  vehicles: [],
+  fuelRecords: [],
+  maintenanceRecords: []
 };
 
 // ---- DATABASE ----
@@ -300,7 +276,7 @@ function renderSection(name) {
 }
 
 // ---- DASHBOARD ----
-function renderDashboard() {
+async function renderDashboard() {
   const v = DB.getActiveVehicle();
   if (!v) {
     document.getElementById('dash-no-vehicle')?.style.setProperty('display', '');
@@ -310,14 +286,24 @@ function renderDashboard() {
   updateAllVehicleImages(v.type);
 
   const s = DB.settings;
-  const fuel = DB.getFuelForVehicle(v.id);
+  
+  // Fetch fuel from backend
+  let fuel = [];
+  try {
+    const fRes = await fetch(`api/get_fuel.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const fData = await fRes.json();
+    if (fData.success) fuel = fData.records;
+  } catch (e) {
+    console.error(e);
+  }
+
   const maint = DB.getMaintenanceForVehicle(v.id);
 
   setText('dash-welcome',       `Welcome back, ${s.ownerName}! Here is your vehicle summary.`);
-  setText('dash-vehicle-title', `${v.name} ${v.year}`);
-  setText('dash-plate',         v.plate);
-  setText('dash-status',        v.status);
-  setText('dash-mileage',       fmtDist(v.mileage));
+  setText('dash-vehicle-title', `${v.make || v.name} ${v.year || ''}`);
+  setText('dash-plate',         v.plate || '');
+  setText('dash-status',        v.status || 'Active');
+  setText('dash-mileage',       fmtDist(v.mileage || 0));
 
   // Monthly fuel spend
   const now     = new Date();
@@ -445,7 +431,9 @@ async function confirmDeleteVehicle(id) {
 
     if (data.success) {
       showNotification('Vehicle deleted');
+      await syncDataWithBackend();
       renderMyVehicles();
+      renderDashboard();
     } else {
       alert('❌ ' + data.message);
     }
@@ -463,7 +451,7 @@ function openAddVehicleModal() {
 }
 
 function editVehicle(id) {
-  const v = DB.vehicles.find(v => v.id === id);
+  const v = DB.vehicles.find(v => String(v.id) === String(id));
   if (!v) return;
   document.getElementById('vehicle-form-id').value   = v.id;
   document.getElementById('vf-name').value           = v.name;
@@ -511,6 +499,7 @@ async function saveVehicle(e) {
     if (data.success) {
       showNotification('Vehicle saved successfully!');
       closeModal('add-vehicle-modal');
+      await syncDataWithBackend();
       renderMyVehicles();
       renderDashboard();
       updateMaintenanceBadge();
@@ -754,11 +743,19 @@ function deleteMaintenanceRecord(id) {
 let fuelChart = null;
 let costChart = null;
 
-function renderReports() {
+async function renderReports() {
   const v = DB.getActiveVehicle();
   if (!v) return;
 
-  const fuel  = DB.getFuelForVehicle(v.id);
+  let fuel = [];
+  try {
+    const fRes = await fetch(`api/get_fuel.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const fData = await fRes.json();
+    if (fData.success) fuel = fData.records;
+  } catch (e) {
+    console.error(e);
+  }
+
   const maint = DB.getMaintenanceForVehicle(v.id);
   const s     = DB.settings;
 
@@ -1003,8 +1000,26 @@ function initMobileNav() {
 }
 
 // ---- INIT ----
-document.addEventListener('DOMContentLoaded', function () {
+async function syncDataWithBackend() {
+  try {
+    const vRes = await fetch(`api/get_vehicles.php?user_id=${user.id}`);
+    const vData = await vRes.json();
+    if (vData.success) {
+      DB.data.vehicles = vData.vehicles;
+      // Ensure active vehicle is valid
+      if (!DB.data.vehicles.find(v => String(v.id) === String(DB.data.activeVehicleId))) {
+        DB.data.activeVehicleId = DB.data.vehicles[0]?.id || null;
+      }
+      DB.save();
+    }
+  } catch (e) {
+    console.error("Failed to sync backend data", e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
   DB.load();
+  await syncDataWithBackend();
 
   // Theme
   const savedMode = localStorage.getItem('themeMode');
