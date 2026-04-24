@@ -1050,7 +1050,13 @@ a {
   h2 { font-size: 1.15rem; }
   .vehicle-title { font-size: 1.4rem !important; }
   h3 { font-size: 1rem; }
-
+  #dashboard-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+}
   /* Mobile nav light mode fix */
   body.light-mode .mobile-nav {
     background: rgba(255,255,255,0.97) !important;
@@ -1090,7 +1096,16 @@ a {
   .topbar {
     padding: 12px 16px;
   }
-}
+
+  #dashboard-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+/* Feedback visual en botones */
+
 /* Feedback visual en botones */
 .btn:hover, .btn:focus {
   filter: brightness(1.08);
@@ -1278,6 +1293,7 @@ img, .illustration {
    HAMBURGER BUTTON
    =================== */
 .hamburger {
+  display: none;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
