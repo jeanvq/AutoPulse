@@ -277,7 +277,7 @@ function renderSection(name) {
 
 // ---- DASHBOARD ----
 async function renderDashboard() {
-  const v = DB.getActiveVehicle();
+  const v = window.activeVehicle || DB.getActiveVehicle();
   if (!v) {
     document.getElementById('dash-no-vehicle')?.style.setProperty('display', '');
     return;
@@ -300,7 +300,7 @@ async function renderDashboard() {
   const maint = DB.getMaintenanceForVehicle(v.id);
 
   setText('dash-welcome',       `Welcome back, ${s.ownerName}! Here is your vehicle summary.`);
-  setText('dash-vehicle-title', `${v.make || v.name} ${v.year || ''}`);
+  setText('dash-vehicle-title', `${v.make} ${v.model} ${v.year}`);
   setText('dash-plate',         v.plate || '');
   setText('dash-status',        v.status || 'Active');
   setText('dash-mileage',       fmtDist(v.mileage || 0));
@@ -348,9 +348,9 @@ async function renderDashboard() {
   // Vehicle selector
   const sel = document.getElementById('dash-vehicle-select');
   if (sel) {
-    sel.innerHTML = DB.vehicles.map(v2 =>
-      `<option value="${v2.id}" ${v2.id === DB.data.activeVehicleId ? 'selected' : ''}>${v2.name} ${v2.year}</option>`
-    ).join('');
+   sel.innerHTML = DB.vehicles.map(v2 =>
+  `<option value="${v2.id}">${v2.make} ${v2.model} ${v2.year}</option>`
+).join('');
   }
 }
 
@@ -651,7 +651,7 @@ function renderMaintenance() {
 
   const records = DB.getMaintenanceForVehicle(v.id);
 
-  setText('maint-vehicle-title', `${v.name} ${v.year}`);
+  setText('maint-vehicle-title', `${v.make} ${v.model} ${v.year}`);
 
   const upcoming = records
     .filter(r => r.nextDate && daysUntil(r.nextDate) > 0)
@@ -1007,13 +1007,15 @@ async function syncDataWithBackend() {
   try {
     const vRes = await fetch(`api/get_vehicles.php?user_id=${user.id}`);
     const vData = await vRes.json();
-    if (vData.success) {
+    if (vData.success && vData.vehicles.length > 0) {
+      // Usar SOLO los datos de MySQL, ignorar localStorage
       DB.data.vehicles = vData.vehicles;
-      // Ensure active vehicle is valid
-      if (!DB.data.vehicles.find(v => String(v.id) === String(DB.data.activeVehicleId))) {
-        DB.data.activeVehicleId = DB.data.vehicles[0]?.id || null;
-      }
+      DB.data.activeVehicleId = vData.vehicles[0].id;
+      window.activeVehicle = vData.vehicles[0];
       DB.save();
+    } else {
+      DB.data.vehicles = [];
+      window.activeVehicle = null;
     }
   } catch (e) {
     console.error("Failed to sync backend data", e);
@@ -1023,7 +1025,7 @@ async function syncDataWithBackend() {
 document.addEventListener('DOMContentLoaded', async function () {
   DB.load();
   await syncDataWithBackend();
-
+  await renderDashboard();
   // Theme
   const savedMode = localStorage.getItem('themeMode');
   if (savedMode === 'light') setTheme('light');

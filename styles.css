@@ -206,6 +206,8 @@ body.light-mode .vehicle-visual-clean img {
   padding: 36px 40px 32px 40px;
   box-shadow: var(--shadow);
   margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .vehicle-card-large .vehicle-title {
@@ -298,6 +300,9 @@ body.light-mode .vehicle-visual-clean img {
 .dashboard-vehicle-data {
   margin: 0 auto 32px auto;
   max-width: 700px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 36px 32px;
   margin-bottom: 40px;
   text-align: center;
@@ -997,18 +1002,31 @@ a {
 /* Mobile — ajustes adicionales */
 @media (max-width: 720px) {
   .app {
-    padding: 0 12px 24px;
+    padding: 0 0 24px;
+  }
+  .content {
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
   }
   .topbar {
-    padding: 16px 16px 16px 16px;
+    padding: 16px;
   }
   .main-section {
-    padding: 16px 0 0 0;
+    padding: 16px 14px 0 14px;
     gap: 20px;
     max-width: 100%;
+    overflow-x: hidden;
+  }
+  .vehicle-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .vehicle-header h1 {
+    padding-left: 0;
   }
   .vehicle-card-large, .vehicle-card-clean, .dashboard-vehicle-data {
-    padding: 22px 18px;
+    padding: 22px 14px;
   }
   .stats-grid, .records-grid {
     gap: 14px;
@@ -1018,13 +1036,32 @@ a {
     grid-template-columns: 1fr;
   }
   .modal-card {
-    padding: 20px 16px;
+    padding: 20px 14px;
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
   }
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.15rem; }
   .vehicle-title { font-size: 1.4rem !important; }
-  h3 {
-    font-size: 1rem;
+  h3 { font-size: 1rem; }
+
+  /* Mobile nav light mode fix */
+  body.light-mode .mobile-nav {
+    background: rgba(255,255,255,0.97) !important;
+  }
+  body.light-mode .mobile-nav a {
+    color: #23272F !important;
+  }
+  body.light-mode .mobile-nav a:hover {
+    background: rgba(25,195,255,0.12);
+    color: var(--accent) !important;
+  }
+
+  /* Auth logo bigger on mobile */
+  .auth-logo {
+    width: 88px !important;
+    height: 88px !important;
   }
 }
 /* Feedback visual en botones */
