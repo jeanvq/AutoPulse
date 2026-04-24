@@ -1,5 +1,5 @@
 // AutoPulse Service Worker
-const CACHE = 'autopulse-v1';
+const CACHE = 'autopulse-v2';
 
 const ASSETS = [
   './',
@@ -35,14 +35,21 @@ self.addEventListener('activate', e => {
 
 // Fetch: cache-first, fallback to network
 self.addEventListener('fetch', e => {
-  // Skip non-GET and cross-origin requests
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
 
+  // Network-first para JS, PHP y API
+  if (e.request.url.includes('.js') || e.request.url.includes('.php')) {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache-first para el resto (CSS, imágenes)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        // Cache successful same-origin responses
         if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE).then(cache => cache.put(e.request, copy));

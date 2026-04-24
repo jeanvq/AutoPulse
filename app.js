@@ -1022,10 +1022,10 @@ async function syncDataWithBackend() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', async function () {
+  document.addEventListener('DOMContentLoaded', async function () {
   DB.load();
+  DB.data.vehicles = []; // Limpiar vehículos viejos de localStorage
   await syncDataWithBackend();
-  await renderDashboard();
   // Theme
   const savedMode = localStorage.getItem('themeMode');
   if (savedMode === 'light') setTheme('light');
