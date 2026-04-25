@@ -62,13 +62,24 @@
       <span>Search</span>
       <input type="search" placeholder="Search vehicles or records" />
     </label>
-    <button class="icon-button notification-btn" aria-label="Notifications">
-      <span class="bell">🔔</span>
-      <span class="badge-dot"></span>
-    </button>
-    <button class="hamburger" id="hamburger-menu" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="notification-wrapper" style="position:relative;">
+  <button class="icon-button notification-btn" aria-label="Notifications" onclick="toggleNotifications()">
+    <span class="bell">🔔</span>
+    <span class="badge-dot" id="notif-badge" style="display:none;"></span>
+  </button>
+  <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:48px;
+       width:320px;background:var(--card);border:1px solid var(--border);
+       border-radius:16px;box-shadow:var(--shadow-strong);z-index:9999;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);">
+      <h3 style="margin:0;font-size:1rem;">Notifications</h3>
+      <button onclick="markAllRead()" 
+              style="font-size:0.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;">
+        Mark all read
+      </button>
+    </div>
+    <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+  </div>
+</div>
             
             <div class="owner">
   <div>

@@ -1040,6 +1040,7 @@ async function syncDataWithBackend() {
   DB.load();
   DB.data.vehicles = []; // Limpiar vehículos viejos de localStorage
   await syncDataWithBackend();
+  
   // Theme
   const savedMode = localStorage.getItem('themeMode');
   if (savedMode === 'light') setTheme('light');
@@ -1091,6 +1092,7 @@ async function syncDataWithBackend() {
   const saved = localStorage.getItem('activeSection');
   showSection(SECTIONS.includes(saved) ? saved : 'dashboard');
   updateMaintenanceBadge();
+  await loadNotifications();
 });
 // ==========================================
 // VIN LOOKUP — NHTSA API
@@ -1164,3 +1166,79 @@ async function lookupVIN() {
     btn.disabled = false;
   }
 }
+
+  // ==========================================
+// NOTIFICATIONS
+// ==========================================
+async function loadNotifications() {
+  try {
+    const response = await fetch(`api/get_notifications.php?user_id=${user.id}`);
+    const data = await response.json();
+    if (!data.success) return;
+
+    const badge = document.getElementById('notif-badge');
+    if (badge) {
+      if (data.unread > 0) {
+        badge.style.display = 'block';
+        badge.textContent = data.unread > 9 ? '9+' : data.unread;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    if (data.notifications.length === 0) {
+      list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);">No notifications yet</div>`;
+      return;
+    }
+
+    list.innerHTML = data.notifications.map(n => `
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+                  background:${n.is_read == 0 ? 'rgba(25,195,255,0.06)' : 'transparent'};
+                  cursor:pointer;"
+           onclick="handleNotificationClick('${n.type}')">
+        <div style="font-weight:${n.is_read == 0 ? '600' : '400'};font-size:0.95rem;margin-bottom:4px;">${n.title}</div>
+        <div style="font-size:0.85rem;color:var(--muted);">${n.message}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">
+          ${new Date(n.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+function toggleNotifications() {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) return;
+  const isVisible = dropdown.style.display !== 'none';
+  dropdown.style.display = isVisible ? 'none' : 'block';
+  if (!isVisible) loadNotifications();
+}
+
+async function markAllRead() {
+  try {
+    await fetch('api/mark_notifications_read.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id })
+    });
+    loadNotifications();
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+  }
+}
+
+function handleNotificationClick(type) {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  if (type === 'maintenance') showSection('maintenance');
+  else if (type === 'fuel') showSection('fuel');
+  else if (type === 'welcome') showSection('my-vehicles');
+  markAllRead();
+}
+
+

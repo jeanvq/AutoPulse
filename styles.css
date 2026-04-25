@@ -735,7 +735,7 @@ a {
   padding: 12px 32px 0 32px;
   width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 .topbar-spacer {
   flex: 1;
@@ -745,7 +745,7 @@ a {
   align-items: center;
   gap: 12px;
   flex-wrap: nowrap;
-  overflow: hidden;
+  overflow: visible;
 }
 .search {
   display: flex;
