@@ -1,5 +1,5 @@
 // AutoPulse Service Worker
-const CACHE = 'autopulse-v2';
+const CACHE = 'autopulse-v4';
 
 const ASSETS = [
   './',

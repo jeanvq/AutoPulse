@@ -968,7 +968,27 @@ a {
 #dashboard-section .records-grid .record-card:first-child {
   margin-top: 48px;
 }
+#my-vehicles-section,
+  #maintenance-section,
+  #fuel-section,
+  #reports-section,
+  #settings-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
 
+  .main-section * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 .record-card {
   background: var(--card);
   border: 1px solid var(--border);
