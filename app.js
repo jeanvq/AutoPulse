@@ -998,7 +998,21 @@ function initMobileNav() {
   window.addEventListener('resize', check);
 
   hamburger.addEventListener('click', () => {
-    mobileNav.style.display = mobileNav.style.display === 'flex' ? 'none' : 'flex';
+    mobileNav.style.display = 'flex';
+  });
+
+  const closeBtn = document.getElementById('mobile-nav-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      mobileNav.style.display = 'none';
+    });
+  }
+
+  // Cerrar al hacer clic en un link
+  document.querySelectorAll('#mobile-nav a[data-section]').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileNav.style.display = 'none';
+    });
   });
 }
 
