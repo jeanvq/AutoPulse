@@ -4,8 +4,6 @@ const CACHE = 'autopulse-v4';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
   './manifest.json',
   './LOGOFINAL.png',
   './SEDAN.png',
@@ -15,7 +13,7 @@ const ASSETS = [
   './PICKUPTRUCK.png'
 ];
 
-// Install: cache all static assets
+// Install: cache only static assets (NO styles.css, NO app.js)
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
@@ -33,19 +31,19 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: cache-first, fallback to network
+// Fetch: network-first para JS y CSS, cache-first para el resto
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
 
-  // Network-first para JS, PHP y API
-  if (e.request.url.includes('.js') || e.request.url.includes('.php')) {
+  if (e.request.url.includes('.js') || 
+      e.request.url.includes('.css') || 
+      e.request.url.includes('.php')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
 
-  // Cache-first para el resto (CSS, imágenes)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
