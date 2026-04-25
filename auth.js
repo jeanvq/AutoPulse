@@ -1,19 +1,24 @@
 function switchTab(tab) {
   const loginForm = document.getElementById('form-login');
   const signupForm = document.getElementById('form-signup');
+  const forgotForm = document.getElementById('form-forgot');
   const tabLogin = document.getElementById('tab-login');
   const tabSignup = document.getElementById('tab-signup');
 
+  loginForm.style.display = 'none';
+  signupForm.style.display = 'none';
+  forgotForm.style.display = 'none';
+  tabLogin.classList.remove('active');
+  tabSignup.classList.remove('active');
+
   if (tab === 'login') {
     loginForm.style.display = 'block';
-    signupForm.style.display = 'none';
     tabLogin.classList.add('active');
-    tabSignup.classList.remove('active');
-  } else {
-    loginForm.style.display = 'none';
+  } else if (tab === 'signup') {
     signupForm.style.display = 'block';
-    tabLogin.classList.remove('active');
     tabSignup.classList.add('active');
+  } else if (tab === 'forgot') {
+    forgotForm.style.display = 'block';
   }
 }
 
@@ -83,6 +88,44 @@ async function handleLogin() {
       window.location.href = 'index.html';
     } else {
       errorDiv.textContent = data.message || data.error || 'An error occurred';
+      errorDiv.style.display = 'block';
+    }
+  } catch (error) {
+    errorDiv.textContent = 'Connection error. Please try again.';
+    errorDiv.style.display = 'block';
+  }
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const password = document.getElementById('forgot-password').value;
+  const errorDiv = document.getElementById('forgot-error');
+  const successDiv = document.getElementById('forgot-success');
+
+  errorDiv.style.display = 'none';
+  successDiv.style.display = 'none';
+
+  if (!email || !password) {
+    errorDiv.textContent = 'All fields are required.';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  try {
+    const response = await fetch('api/reset_password.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      successDiv.textContent = '✅ Password reset! You can now sign in.';
+      successDiv.style.display = 'block';
+      setTimeout(() => switchTab('login'), 2000);
+    } else {
+      errorDiv.textContent = data.message;
       errorDiv.style.display = 'block';
     }
   } catch (error) {

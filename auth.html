@@ -45,6 +45,36 @@
         </div>
         <div id="login-error" class="auth-message error" style="display:none;"></div>
         <button class="btn primary auth-btn" onclick="handleLogin()">Sign In</button>
+        <p style="text-align:center;margin-top:12px;font-size:0.88rem;">
+         <a href="javascript:void(0)" onclick="switchTab('forgot')"
+             style="color:var(--accent);text-decoration:none;font-weight:500;">
+            Forgot password?
+          </a>
+        </p>
+      </div>
+
+      <!-- Forgot Password Form -->
+      <div id="form-forgot" class="auth-form" style="display:none;">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px;">
+          Enter your email and choose a new password.
+        </p>
+        <div class="form-group">
+          <label for="forgot-email">Email</label>
+          <input type="email" id="forgot-email" placeholder="you@email.com" required />
+        </div>
+        <div class="form-group">
+          <label for="forgot-password">New Password</label>
+          <input type="password" id="forgot-password" placeholder="Min. 6 characters" required />
+        </div>
+        <div id="forgot-error" class="auth-message error" style="display:none;"></div>
+        <div id="forgot-success" class="auth-message success" style="display:none;"></div>
+        <button class="btn primary auth-btn" onclick="handleForgotPassword()">Reset Password</button>
+        <p style="text-align:center;margin-top:12px;font-size:0.88rem;">
+          <a href="#" onclick="switchTab('login')" 
+             style="color:var(--accent);text-decoration:none;font-weight:500;">
+            ← Back to Sign In
+          </a>
+        </p>
       </div>
 
       <!-- Signup Form -->
