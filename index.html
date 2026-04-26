@@ -48,10 +48,10 @@
       <!-- MAIN CONTENT -->
       <main class="content">
 
-       <!-- TOP BAR -->
+ <!-- TOP BAR -->
 <div class="topbar">
-  <div class="mobile-brand" style="display:none;align-items:center;gap:10px;font-weight:900;font-size:1.4rem;color:var(--accent);letter-spacing:-0.5px;">
-    <img src="LOGOFINAL.png" alt="AutoPulse" style="width:50px;height:50px;border-radius:50%;box-shadow:0 4px 12px rgba(25,195,255,0.3);" /> AutoPulse
+  <div class="mobile-brand" style="display:none;align-items:center;gap:10px;font-weight:900;font-size:1.6rem;color:var(--accent);letter-spacing:-0.5px;">
+    <img src="LOGOFINAL.png" alt="AutoPulse" style="width:65px;height:65px;border-radius:50%;box-shadow:0 4px 12px rgba(25,195,255,0.3);" /> AutoPulse
   </div>
   <div class="topbar-spacer"></div>
   <div class="topbar-actions">
@@ -63,39 +63,40 @@
       <input type="search" placeholder="Search vehicles or records" />
     </label>
     <div class="notification-wrapper" style="position:relative;">
-  <button class="icon-button notification-btn" aria-label="Notifications" onclick="toggleNotifications()">
-    <span class="bell">🔔</span>
-    <span class="badge-dot" id="notif-badge" style="display:none;"></span>
-  </button>
-  <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:48px;
-       width:320px;background:var(--card);border:1px solid var(--border);
-       border-radius:16px;box-shadow:var(--shadow-strong);z-index:9999;overflow:hidden;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);">
-      <h3 style="margin:0;font-size:1rem;">Notifications</h3>
-      <button onclick="markAllRead()" 
-              style="font-size:0.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;">
-        Mark all read
+      <button class="icon-button notification-btn" aria-label="Notifications" onclick="toggleNotifications()">
+        <span class="bell">🔔</span>
+        <span class="badge-dot" id="notif-badge" style="display:none;"></span>
+      </button>
+      <div id="notif-dropdown" style="display:none;position:fixed;right:8px;top:80px;
+           width:320px;background:var(--card);border:1px solid var(--border);
+           border-radius:16px;box-shadow:var(--shadow-strong);z-index:9999;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);">
+          <h3 style="margin:0;font-size:1rem;">Notifications</h3>
+          <button onclick="markAllRead()" 
+                  style="font-size:0.8rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;">
+            Mark all read
+          </button>
+        </div>
+        <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <button class="hamburger" id="hamburger-menu" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="owner">
+      <div>
+        <p id="topbar-username">User</p>
+        <span>Vehicle owner</span>
+      </div>
+      <img id="topbar-avatar" src="https://ui-avatars.com/api/?name=User&background=cccccc&color=222222&rounded=true&size=40"
+           alt="Avatar" class="avatar" />
+      <button onclick="handleLogout()" class="btn ghost" 
+              style="font-size:0.8rem;padding:6px 12px;margin-left:8px;">
+        Logout
       </button>
     </div>
-    <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
   </div>
 </div>
-            
-            <div class="owner">
-  <div>
-    <p id="topbar-username">User</p>
-    <span>Vehicle owner</span>
-  </div>
-  <img id="topbar-avatar" src="https://ui-avatars.com/api/?name=User&background=cccccc&color=222222&rounded=true&size=40"
-       alt="Avatar" class="avatar" />
-  <button onclick="handleLogout()" class="btn ghost" 
-          style="font-size:0.8rem;padding:6px 12px;margin-left:8px;">
-    Logout
-  </button>
-</div>
-            </div>
-          </div>
-        </div>
 
         <!-- ===== DASHBOARD SECTION ===== -->
         <section id="dashboard-section" class="main-section">

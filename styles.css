@@ -481,6 +481,7 @@ body.modal-open {
     margin-bottom: 18px;
     padding: 12px 6px;
   }
+  
 }
 
 /* Main section layout organization */
@@ -1137,6 +1138,16 @@ a {
   /* Topbar más compacto */
   .topbar {
     padding: 12px 16px;
+  }
+  .topbar {
+    overflow: visible;
+  }
+  .topbar-actions {
+    overflow: visible;
+  }
+  #hamburger-menu {
+    display: flex !important;
+    flex-shrink: 0;
   }
 }
 
