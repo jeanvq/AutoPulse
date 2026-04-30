@@ -645,64 +645,73 @@ function initFuelCalculator() {
 }
 
 // ---- MAINTENANCE ----
-function renderMaintenance() {
-  const v = DB.getActiveVehicle();
+async function renderMaintenance() {
+  const v = window.activeVehicle;
   if (!v) return;
-
-  const records = DB.getMaintenanceForVehicle(v.id);
 
   setText('maint-vehicle-title', `${v.make} ${v.model} ${v.year}`);
 
-  const upcoming = records
-    .filter(r => r.nextDate && daysUntil(r.nextDate) > 0)
-    .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate))[0];
+  try {
+    const response = await fetch(`api/get_maintenance.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const data = await response.json();
 
-  if (upcoming) {
-    const days = daysUntil(upcoming.nextDate);
-    const el   = document.getElementById('maint-next-due');
-    if (el) { el.textContent = `${days} days`; el.style.color = days <= 14 ? '#e74c3c' : ''; }
-    setText('maint-next-label', upcoming.type);
-  } else {
-    setText('maint-next-due',   '—');
-    setText('maint-next-label', 'No upcoming service');
-  }
+    if (!data.success) return;
+    const records = data.records;
 
-  // Timeline
-  const timeline = document.getElementById('maintenance-timeline-list');
-  if (timeline) {
-    timeline.innerHTML = records.length ? records.map(r => {
-          const label  = new Date(r.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-          const status = r.nextDate
-            ? (daysUntil(r.nextDate) <= 0 ? 'overdue' : 'scheduled')
-            : 'completed';
-          const color  = status === 'overdue' ? '#e74c3c' : status === 'scheduled' ? 'var(--accent)' : 'var(--muted)';
-          return `<li>
-            <strong>${label}:</strong> ${r.type}
-            <span style="color:${color};margin-left:6px;">(${status})</span>
-            ${r.notes ? `<span style="color:var(--muted);margin-left:6px;">— ${r.notes}</span>` : ''}
-            <span style="float:right;color:var(--accent);">${fmt(r.price)}</span>
-          </li>`;
-        }).join('')
+    const upcoming = records
+      .filter(r => r.next_date && daysUntil(r.next_date) > 0)
+      .sort((a, b) => new Date(a.next_date) - new Date(b.next_date))[0];
+
+    if (upcoming) {
+      const days = daysUntil(upcoming.next_date);
+      const el = document.getElementById('maint-next-due');
+      if (el) { el.textContent = `${days} days`; el.style.color = days <= 14 ? '#e74c3c' : ''; }
+      setText('maint-next-label', upcoming.type);
+    } else {
+      setText('maint-next-due', '—');
+      setText('maint-next-label', 'No upcoming service');
+    }
+
+    // Timeline
+    const timeline = document.getElementById('maintenance-timeline-list');
+    if (timeline) {
+      timeline.innerHTML = records.length ? records.map(r => {
+        const label = new Date(r.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        const status = r.next_date
+          ? (daysUntil(r.next_date) <= 0 ? 'overdue' : 'scheduled')
+          : 'completed';
+        const color = status === 'overdue' ? '#e74c3c' : status === 'scheduled' ? 'var(--accent)' : 'var(--muted)';
+        return `<li>
+          <strong>${label}:</strong> ${r.type}
+          <span style="color:${color};margin-left:6px;">(${status})</span>
+          ${r.notes ? `<span style="color:var(--muted);margin-left:6px;">— ${r.notes}</span>` : ''}
+          <span style="float:right;color:var(--accent);">${fmt(r.price)}</span>
+        </li>`;
+      }).join('')
       : `<li>${emptyState('🔧', 'No maintenance records', 'Add your first service record using the button above.', 'openAddMaintenanceModal()', '+ Add Record')}</li>`;
-  }
+    }
 
-  // Table
-  const tbody = document.getElementById('maint-table-body');
-  if (tbody) {
-    tbody.innerHTML = records.length
-      ? records.map(r => `
-          <tr>
-            <td>${r.date}</td>
-            <td>${r.type}</td>
-            <td>${fmt(r.price)}</td>
-            <td>${r.nextDate || '—'}</td>
-            <td>
-              <button class="btn ghost"
-                style="padding:4px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;"
-                onclick="deleteMaintenanceRecord('${r.id}')">Delete</button>
-            </td>
-          </tr>`).join('')
-      : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">No maintenance records yet.</td></tr>';
+    // Table
+    const tbody = document.getElementById('maint-table-body');
+    if (tbody) {
+      tbody.innerHTML = records.length
+        ? records.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.type}</td>
+              <td>${fmt(r.price)}</td>
+              <td>${r.next_date || '—'}</td>
+              <td>
+                <button class="btn ghost"
+                  style="padding:4px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;"
+                  onclick="deleteMaintenanceRecord('${r.id}')">Delete</button>
+              </td>
+            </tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">No maintenance records yet.</td></tr>';
+    }
+
+  } catch (error) {
+    console.error('Error loading maintenance records:', error);
   }
 }
 
@@ -712,33 +721,72 @@ function openAddMaintenanceModal() {
   openModal('add-maintenance-modal');
 }
 
-function saveMaintenanceRecord(e) {
+async function saveMaintenanceRecord(e) {
   e.preventDefault();
-  const v = DB.getActiveVehicle();
-  if (!v) return;
+  const v = window.activeVehicle;
+  if (!v) {
+    alert('Please select an active vehicle first.');
+    return;
+  }
 
-  DB.addMaintenanceRecord({
-    vehicleId: v.id,
-    date:      document.getElementById('mf-date').value,
-    type:      document.getElementById('mf-type').value,
-    price:     parseFloat(document.getElementById('mf-price').value) || 0,
-    notes:     document.getElementById('mf-notes').value,
-    nextDate:  document.getElementById('mf-next-date').value || ''
-  });
+  const date     = document.getElementById('mf-date').value;
+  const type     = document.getElementById('mf-type').value;
+  const price    = parseFloat(document.getElementById('mf-price').value) || 0;
+  const notes    = document.getElementById('mf-notes').value;
+  const nextDate = document.getElementById('mf-next-date').value || null;
+  console.log('nextDate::', nextDate);
 
-  closeModal('add-maintenance-modal');
-  renderMaintenance();
-  renderDashboard();
-  updateMaintenanceBadge();
-  showNotification('Maintenance record added');
+  try {
+    const response = await fetch('api/add_maintenance.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vehicle_id: v.id,
+        user_id: user.id,
+        date, type, price, notes,
+        next_date: nextDate
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      closeModal('add-maintenance-modal');
+      renderMaintenance();
+      renderDashboard();
+      updateMaintenanceBadge();
+      showNotification('Maintenance record added');
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
+  }
 }
+async function deleteMaintenanceRecord(id) {
+  if (!confirm('Delete this maintenance record?')) return;
 
-function deleteMaintenanceRecord(id) {
-  if (confirm('Delete this maintenance record?')) {
-    DB.deleteMaintenanceRecord(id);
-    renderMaintenance();
-    renderDashboard();
-    showNotification('Record deleted');
+  try {
+    const response = await fetch('api/delete_maintenance.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        record_id: id,
+        user_id: user.id
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      renderMaintenance();
+      renderDashboard();
+      showNotification('Record deleted');
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
   }
 }
 
