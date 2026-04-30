@@ -349,15 +349,15 @@ async function renderDashboard() {
         <td>${fmt(r.cost)}</td>
         <td>${fmtDist(r.odometer)}</td>
         <td>${r.station}</td>
-        <td>${r.consumption.toFixed(2)} L/100${s.units}</td>
+        <td>${r.km > 0 ? ((parseFloat(r.amount) / parseFloat(r.km)) * 100).toFixed(2) : '—'} L/100${s.units}</td>
       </tr>`).join('') || '<tr><td colspan="6" style="color:var(--muted);text-align:center">No records yet</td></tr>';
   }
 
   // Vehicle selector
   const sel = document.getElementById('dash-vehicle-select');
   if (sel) {
-   sel.innerHTML = DB.vehicles.map(v2 =>
-  `<option value="${v2.id}">${v2.make} ${v2.model} ${v2.year}</option>`
+  sel.innerHTML = DB.data.vehicles.map(v2 =>
+  `<option value="${v2.id}" ${v2.id == v.id ? 'selected' : ''}>${v2.make} ${v2.model} ${v2.year}</option>`
 ).join('');
   }
 }
@@ -376,6 +376,7 @@ async function renderMyVehicles() {
       container.innerHTML = emptyState('🚗', 'No vehicles yet', 'Add your first vehicle to start tracking fuel and maintenance.', 'openAddVehicleModal()', '+ Add Vehicle');
       return;
     }
+  
 
     container.innerHTML = data.vehicles.map(v => `
   <div class="vehicle-card-large">
