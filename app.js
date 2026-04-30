@@ -297,7 +297,15 @@ async function renderDashboard() {
     console.error(e);
   }
 
-  const maint = DB.getMaintenanceForVehicle(v.id);
+  // Fetch maintenance from backend
+  let maint = [];
+  try {
+    const mRes = await fetch(`api/get_maintenance.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const mData = await mRes.json();
+    if (mData.success) maint = mData.records;
+  } catch (e) {
+    console.error(e);
+  }
 
   setText('dash-welcome',       `Welcome back, ${s.ownerName}! Here is your vehicle summary.`);
   setText('dash-vehicle-title', `${v.make} ${v.model} ${v.year}`);
@@ -314,11 +322,11 @@ async function renderDashboard() {
 
   // Next maintenance
   const upcoming = maint
-    .filter(r => r.nextDate && daysUntil(r.nextDate) > 0)
-    .sort((a, b) => new Date(a.nextDate) - new Date(b.nextDate))[0];
+    .filter(r => (r.next_date || r.nextDate) && daysUntil(r.next_date || r.nextDate) > 0)
+    .sort((a, b) => new Date(a.next_date || a.nextDate) - new Date(b.next_date || b.nextDate))[0];
 
   if (upcoming) {
-    const days = daysUntil(upcoming.nextDate);
+    const days = daysUntil(upcoming.next_date || upcoming.nextDate);
     const el = document.getElementById('dash-maint-due');
     if (el) { el.textContent = `${days} days`; el.style.color = days <= 14 ? '#e74c3c' : ''; }
     setText('dash-maint-label', upcoming.type);
@@ -337,7 +345,7 @@ async function renderDashboard() {
     tbody.innerHTML = fuel.slice(0, 4).map(r => `
       <tr>
         <td>${r.date}</td>
-        <td>${r.amount.toFixed(1)} L</td>
+        <td>${parseFloat(r.amount).toFixed(1)} L</td>
         <td>${fmt(r.cost)}</td>
         <td>${fmtDist(r.odometer)}</td>
         <td>${r.station}</td>
@@ -618,12 +626,30 @@ async function saveFuelRecord(e) {
   }
 }
 
-function deleteFuelRecord(id) {
-  if (confirm('Delete this fuel record?')) {
-    DB.deleteFuelRecord(id);
-    renderFuel();
-    renderDashboard();
-    showNotification('Record deleted');
+async function deleteFuelRecord(id) {
+  if (!confirm('Delete this fuel record?')) return;
+
+  try {
+    const response = await fetch('api/delete_fuel.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        record_id: id,
+        user_id: user.id
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      renderFuel();
+      renderDashboard();
+      showNotification('Record deleted');
+    } else {
+      alert('❌ ' + data.message);
+    }
+  } catch (error) {
+    alert('❌ Connection error. Please try again.');
   }
 }
 
