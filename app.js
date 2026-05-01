@@ -997,9 +997,9 @@ function renderSettings() {
 
   const sel = document.getElementById('s-active-vehicle');
   if (sel) {
-    sel.innerHTML = DB.vehicles.map(v =>
-      `<option value="${v.id}" ${DB.data.activeVehicleId === v.id ? 'selected' : ''}>${v.name} ${v.year}</option>`
-    ).join('') || '<option value="">No vehicles</option>';
+    sel.innerHTML = DB.data.vehicles.map(v =>
+  `<option value="${v.id}" ${v.id == DB.data.activeVehicleId ? 'selected' : ''}>${v.make} ${v.model} ${v.year}</option>`
+).join('') || '<option value="">No vehicles</option>';
   }
 }
 
