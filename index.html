@@ -120,6 +120,28 @@
             </div>
           </div>
 
+          <!-- Health Score -->
+<div class="health-score-card">
+  <div class="health-score-circle">
+    <svg viewBox="0 0 120 120" class="health-score-svg">
+      <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border)" stroke-width="10"/>
+      <circle cx="60" cy="60" r="54" fill="none" stroke="#27ae60" stroke-width="10"
+              stroke-dasharray="339.3" stroke-dashoffset="339.3"
+              stroke-linecap="round" transform="rotate(-90 60 60)"
+              id="health-score-ring"/>
+    </svg>
+    <div class="health-score-value">
+      <span id="health-score-number">—</span>
+      <small>%</small>
+    </div>
+  </div>
+  <div class="health-score-info">
+    <h3 id="health-score-title">Vehicle Health</h3>
+    <p id="health-score-message">Calculating...</p>
+    <div id="health-score-details" style="margin-top:12px;display:grid;gap:8px;"></div>
+  </div>
+</div>
+
           <div class="vehicle-card-clean dashboard-vehicle-data">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
               <div class="vehicle-title" id="dash-vehicle-title">—</div>

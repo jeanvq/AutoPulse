@@ -1505,3 +1505,92 @@ body.light-mode .settings-card {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ===== VEHICLE HEALTH SCORE ===== */
+.health-score-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+}
+
+.health-score-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.health-score-svg {
+  width: 120px;
+  height: 120px;
+  transform: rotate(0deg);
+}
+
+.health-score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  line-height: 1;
+}
+
+.health-score-value span {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.health-score-value small {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.health-score-info {
+  flex: 1;
+}
+
+.health-score-info h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+}
+
+.health-score-info p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.health-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.health-detail-item span:first-child {
+  font-size: 1rem;
+}
+
+/* Animación del ring */
+.health-score-ring-animate {
+  transition: stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);
+}
+
+@media (max-width: 720px) {
+  .health-score-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 16px;
+    gap: 16px;
+  }
+}

@@ -351,6 +351,9 @@ async function renderDashboard() {
   // Alerts badge
   const alerts = maint.filter(r => r.nextDate && daysUntil(r.nextDate) <= 30).length;
   setText('dash-alerts', alerts);
+   // Health Score
+  const { score, details } = calculateHealthScore(v, fuel, maint);
+  renderHealthScore(score, details);
 
   // Fuel records preview in modal
   const tbody = document.getElementById('dash-fuel-preview');
@@ -1498,5 +1501,121 @@ async function runAIScan() {
   } finally {
     btn.style.display = 'block';
     loading.style.display = 'none';
+  }
+}
+
+// ==========================================
+// VEHICLE HEALTH SCORE 🏥
+// ==========================================
+function calculateHealthScore(vehicle, fuelRecords, maintRecords) {
+  let score = 100;
+  const details = [];
+
+  // Factor 1: Mantenimiento (50%)
+  const overdue = maintRecords.filter(r => {
+    const nextDate = r.next_date || r.nextDate;
+    return nextDate && daysUntil(nextDate) < 0;
+  });
+
+  const upcoming = maintRecords.filter(r => {
+    const nextDate = r.next_date || r.nextDate;
+    return nextDate && daysUntil(nextDate) >= 0 && daysUntil(nextDate) <= 30;
+  });
+
+  if (overdue.length > 0) {
+    score -= overdue.length * 20;
+    details.push({ icon: '🔴', text: `${overdue.length} overdue maintenance` });
+  } else if (upcoming.length > 0) {
+    score -= upcoming.length * 5;
+    details.push({ icon: '🟡', text: `${upcoming.length} maintenance due soon` });
+  } else if (maintRecords.length > 0) {
+    details.push({ icon: '🟢', text: 'Maintenance up to date' });
+  } else {
+    score -= 15;
+    details.push({ icon: '⚪', text: 'No maintenance records' });
+  }
+
+  // Factor 2: Kilometraje (30%)
+  const currentYear = new Date().getFullYear();
+  const vehicleAge = currentYear - parseInt(vehicle.year);
+  const expectedKm = vehicleAge * 20000; // ~20,000 km/año promedio
+  const actualKm = parseInt(vehicle.mileage) || 0;
+
+  if (actualKm > expectedKm * 1.5) {
+    score -= 20;
+    details.push({ icon: '🔴', text: 'High mileage for vehicle age' });
+  } else if (actualKm > expectedKm * 1.2) {
+    score -= 10;
+    details.push({ icon: '🟡', text: 'Above average mileage' });
+  } else {
+    details.push({ icon: '🟢', text: 'Normal mileage for age' });
+  }
+
+  // Factor 3: Actividad de registros (20%)
+  const recentFuel = fuelRecords.filter(r => {
+    const days = Math.floor((new Date() - new Date(r.date)) / (1000 * 60 * 60 * 24));
+    return days <= 30;
+  });
+
+  if (recentFuel.length > 0) {
+    details.push({ icon: '🟢', text: 'Active fuel tracking' });
+  } else {
+    score -= 10;
+    details.push({ icon: '⚪', text: 'No recent fuel records' });
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  return { score, details };
+}
+
+function renderHealthScore(score, details) {
+  // Número
+  document.getElementById('health-score-number').textContent = score;
+
+  // Color y mensaje según score
+  let color, title, message;
+  if (score >= 90) {
+    color = '#27ae60';
+    title = '🟢 Great Shape!';
+    message = 'Your vehicle is well maintained and running great.';
+  } else if (score >= 70) {
+    color = '#f39c12';
+    title = '🟡 Good Condition';
+    message = 'Your vehicle is doing well but some attention is needed.';
+  } else if (score >= 50) {
+    color = '#e67e22';
+    title = '🟠 Needs Attention';
+    message = 'Some issues detected. Schedule a checkup soon.';
+  } else {
+    color = '#e74c3c';
+    title = '🔴 Poor Condition';
+    message = 'Immediate attention required. Check your maintenance records.';
+  }
+
+  // Actualizar título y mensaje
+  document.getElementById('health-score-title').textContent = title;
+  document.getElementById('health-score-message').textContent = message;
+
+  // Animar el ring
+  const ring = document.getElementById('health-score-ring');
+  if (ring) {
+    const circumference = 339.3;
+    const offset = circumference - (score / 100) * circumference;
+    ring.style.stroke = color;
+    ring.classList.add('health-score-ring-animate');
+    setTimeout(() => {
+      ring.style.strokeDashoffset = offset;
+    }, 100);
+  }
+
+  // Detalles
+  const detailsEl = document.getElementById('health-score-details');
+  if (detailsEl) {
+    detailsEl.innerHTML = details.map(d => `
+      <div class="health-detail-item">
+        <span>${d.icon}</span>
+        <span>${d.text}</span>
+      </div>
+    `).join('');
   }
 }
