@@ -248,7 +248,7 @@ function setTheme(mode) {
 }
 
 // ---- NAVIGATION ----
-const SECTIONS = ['dashboard', 'my-vehicles', 'maintenance', 'fuel', 'reports', 'settings'];
+const SECTIONS = ['dashboard', 'my-vehicles', 'maintenance', 'fuel', 'reports', 'settings', 'ai-scan'];
 
 function showSection(name) {
   SECTIONS.forEach(s => {
@@ -1359,5 +1359,78 @@ async function deleteNotification(id) {
     loadNotifications();
   } catch (error) {
     console.error('Error deleting notification:', error);
+  }
+}
+
+// ==========================================
+// AI DASHBOARD SCANNER 🔍
+// ==========================================
+document.getElementById('ai-scan-input')?.addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('ai-scan-preview');
+    const img = document.getElementById('ai-scan-img');
+    if (preview && img) {
+      img.src = e.target.result;
+      preview.style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+async function runAIScan() {
+  const input = document.getElementById('ai-scan-input');
+  const btn = document.getElementById('ai-scan-btn');
+  const loading = document.getElementById('ai-scan-loading');
+  const result = document.getElementById('ai-scan-result');
+
+  if (!input.files[0]) {
+    alert('Please select an image first.');
+    return;
+  }
+
+  btn.style.display = 'none';
+  loading.style.display = 'block';
+  result.style.display = 'none';
+
+  const file = input.files[0];
+  const base64 = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    const response = await fetch('api/ai_scan.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: base64,
+        media_type: file.type
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      result.style.display = 'block';
+      result.innerHTML = `
+        <h3 style="margin:0 0 12px 0;font-size:1.05rem;">🤖 AI Analysis</h3>
+        <div style="font-size:0.95rem;line-height:1.7;white-space:pre-wrap;">${data.analysis}</div>
+      `;
+    } else {
+      result.style.display = 'block';
+      result.innerHTML = `<p style="color:#e74c3c;">❌ ${data.message}</p>`;
+    }
+
+  } catch (error) {
+    result.style.display = 'block';
+    result.innerHTML = `<p style="color:#e74c3c;">❌ Connection error. Please try again.</p>`;
+  } finally {
+    btn.style.display = 'block';
+    loading.style.display = 'none';
   }
 }
