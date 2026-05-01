@@ -1,3 +1,4 @@
 .DS_Store
 config/db.php
 .env
+api/ai_scan.php

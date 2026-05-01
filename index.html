@@ -135,22 +135,25 @@
             </div>
           </div>
 
-          <div class="stats-grid">
-            <article class="stat-card">
-              <h3>Mileage</h3>
-              <p id="dash-mileage">—</p>
-            </article>
-            <article class="stat-card">
-              <h3>Fuel spend (month)</h3>
-              <p id="dash-fuel-spend">—</p>
-              <span id="dash-fuel-count"></span>
-            </article>
-            <article class="stat-card">
-              <h3>Maintenance due</h3>
-              <p id="dash-maint-due">—</p>
-              <span id="dash-maint-label"></span>
-            </article>
-          </div>
+         <div class="stats-grid">
+  <article class="stat-card stat-card--mileage">
+    <div class="stat-card-icon">🛣️</div>
+    <h3>Mileage</h3>
+    <p id="dash-mileage">—</p>
+  </article>
+  <article class="stat-card stat-card--fuel">
+    <div class="stat-card-icon">⛽</div>
+    <h3>Fuel spend (month)</h3>
+    <p id="dash-fuel-spend">—</p>
+    <span id="dash-fuel-count"></span>
+  </article>
+  <article class="stat-card stat-card--maintenance">
+    <div class="stat-card-icon">🔧</div>
+    <h3>Maintenance due</h3>
+    <p id="dash-maint-due">—</p>
+    <span id="dash-maint-label"></span>
+  </article>
+</div>
 
           <div class="records-grid">
             <article class="record-card" id="fuel-records-card" style="cursor:pointer;" onclick="openModal('fuel-modal')">
@@ -412,9 +415,11 @@
       🔍 Analyze Warning Light
     </button>
 
-    <div id="ai-scan-loading" style="display:none;text-align:center;padding:20px;color:var(--muted);">
-      ⏳ Analyzing your image...
-    </div>
+    <div id="ai-scan-loading" style="display:none;text-align:center;padding:32px 20px;">
+  <div style="font-size:3rem;animation:spin 1.5s linear infinite;display:inline-block;">🔍</div>
+  <p style="color:var(--muted);margin-top:12px;font-size:0.95rem;">Analyzing your image with AI...</p>
+  <p style="color:var(--muted);font-size:0.85rem;">This may take a few seconds</p>
+</div>
 
     <div id="ai-scan-result" style="display:none;margin-top:20px;padding:20px;
          background:var(--bg-soft);border-radius:12px;border:1px solid var(--border);">

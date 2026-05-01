@@ -328,10 +328,23 @@ async function renderDashboard() {
   if (upcoming) {
     const days = daysUntil(upcoming.next_date || upcoming.nextDate);
     const el = document.getElementById('dash-maint-due');
-    if (el) { el.textContent = `${days} days`; el.style.color = days <= 14 ? '#e74c3c' : ''; }
+    const card = el?.closest('.stat-card--maintenance');
+    if (el) { 
+      el.textContent = `${days} days`; 
+      el.style.color = days <= 14 ? '#e74c3c' : '';
+    }
+    if (card) {
+      if (days <= 0) {
+        card.classList.add('overdue');
+        card.querySelector('.stat-card-icon').textContent = '⚠️';
+      } else if (days <= 14) {
+        card.style.borderLeftColor = '#f39c12';
+        card.querySelector('.stat-card-icon').textContent = '⏰';
+      }
+    }
     setText('dash-maint-label', upcoming.type);
   } else {
-    setText('dash-maint-due',   '—');
+    setText('dash-maint-due', '—');
     setText('dash-maint-label', 'No upcoming');
   }
 
@@ -1449,9 +1462,18 @@ async function runAIScan() {
     if (data.success) {
       result.style.display = 'block';
       result.innerHTML = `
-        <h3 style="margin:0 0 12px 0;font-size:1.05rem;">🤖 AI Analysis</h3>
-        <div style="font-size:0.95rem;line-height:1.7;white-space:pre-wrap;">${data.analysis}</div>
-      `;
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <span style="font-size:1.8rem;">🤖</span>
+    <div>
+      <h3 style="margin:0;font-size:1.05rem;">AI Analysis Complete</h3>
+      <span style="font-size:0.8rem;color:var(--muted);">Powered by Claude AI</span>
+    </div>
+  </div>
+  <div style="font-size:0.95rem;line-height:1.8;white-space:pre-wrap;
+              border-left:3px solid var(--accent);padding-left:14px;">
+    ${data.analysis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+  </div>
+`;
     } else {
       result.style.display = 'block';
       result.innerHTML = `<p style="color:#e74c3c;">❌ ${data.message}</p>`;

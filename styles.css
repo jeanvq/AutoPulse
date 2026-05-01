@@ -1473,3 +1473,35 @@ body.light-mode .settings-card {
 .main-section > *:first-child {
   margin-top: 0;
 }
+
+/* ===== STAT CARDS MEJORADAS ===== */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.stat-card--mileage {
+  border-left: 4px solid #19c3ff;
+}
+
+.stat-card--fuel {
+  border-left: 4px solid #f39c12;
+}
+
+.stat-card--maintenance {
+  border-left: 4px solid #27ae60;
+}
+
+.stat-card--maintenance.overdue {
+  border-left-color: #e74c3c;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
