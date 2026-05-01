@@ -5,12 +5,12 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './LOGOFINAL.png',
-  './SEDAN.png',
-  './HATCH.png',
-  './SUV.png',
-  './MINIVAN.png',
-  './PICKUPTRUCK.png'
+  './images/NEW.png',
+  './images/SEDAN.png',
+  './images/HATCH.png',
+  './images/SUV.png',
+  './images/VAN.png',
+  './images/TRUCK.png'
 ];
 
 // Install: cache only static assets (NO styles.css, NO app.js)

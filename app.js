@@ -173,13 +173,13 @@ function daysUntil(dateStr) {
 
 function typeToImage(type) {
   const map = {
-    sedan:    'SEDAN.png',
-    hatchback:'HATCH.png',
-    suv:      'SUV.png',
-    van:      'MINIVAN.png',
-    pickup:   'PICKUPTRUCK.png'
+    sedan:    'images/SEDAN.png',
+    hatchback:'images/HATCH.png',
+    suv:      'images/SUV.png',
+    van:      'images/VAN.png',
+    pickup:   'images/TRUCK.png'
   };
-  return map[type] || 'SUV.png';
+  return map[type] || 'images/SUV.png';
 }
 
 function updateAllVehicleImages(type) {
