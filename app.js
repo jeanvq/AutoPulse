@@ -400,7 +400,7 @@ async function renderMyVehicles() {
     </div>
     <div style="margin-top:16px;overflow:hidden;">
       <img src="${typeToImage(v.category)}" alt="${v.make} ${v.model}"
-           style="width:100%;max-width:100%;max-height:180px;border-radius:14px;object-fit:cover;" />
+           style="width:100%;max-width:380px;max-height:180px;border-radius:14px;object-fit:cover;"
     </div>
     <div style="margin-top:14px;">
       <span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">Active vehicle</span>
@@ -1162,6 +1162,37 @@ async function syncDataWithBackend() {
   initSearch();
   initMobileNav();
   initModals();
+
+  document.getElementById('fuel-records-card')?.addEventListener('click', async () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  openModal('fuel-modal');
+  const v = window.activeVehicle;
+  if (!v) return;
+  
+  try {
+    const response = await fetch(`api/get_fuel.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const data = await response.json();
+    const tbody = document.getElementById('dash-fuel-preview');
+    if (!tbody) return;
+    
+    if (data.success && data.records.length > 0) {
+      tbody.innerHTML = data.records.slice(0, 5).map(r => `
+        <tr>
+          <td>${r.date}</td>
+          <td>${parseFloat(r.amount).toFixed(1)} L</td>
+          <td>$${parseFloat(r.cost).toFixed(2)}</td>
+          <td>${r.odometer ? r.odometer + ' km' : '—'}</td>
+          <td>${r.station || '—'}</td>
+          <td>${r.km > 0 ? ((parseFloat(r.amount) / parseFloat(r.km)) * 100).toFixed(2) : '—'} L/100km</td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);">No fuel records yet.</td></tr>';
+    }
+  } catch (error) {
+    console.error('Error loading fuel preview:', error);
+  }
+});
 
   // Restore last section
   const saved = localStorage.getItem('activeSection');
