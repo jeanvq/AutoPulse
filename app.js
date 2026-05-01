@@ -1168,6 +1168,7 @@ async function syncDataWithBackend() {
   showSection(SECTIONS.includes(saved) ? saved : 'dashboard');
   updateMaintenanceBadge();
   await loadNotifications();
+  checkWinterMode();
 });
 // ==========================================
 // VIN LOOKUP — NHTSA API
@@ -1242,6 +1243,31 @@ async function lookupVIN() {
   }
 }
 
+
+// ==========================================
+// WINTER MODE ❄️
+// ==========================================
+async function checkWinterMode() {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    try {
+      const response = await fetch(`api/winter_check.php?user_id=${user.id}&lat=${lat}&lon=${lon}`);
+      const data = await response.json();
+
+      if (data.success && data.notifications_added.length > 0) {
+        await loadNotifications();
+        showNotification(`❄️ Winter alerts added! Temp: ${data.temperature}°C`);
+      }
+    } catch (error) {
+      console.error('Winter mode error:', error);
+    }
+  });
+}
+
   // ==========================================
 // NOTIFICATIONS
 // ==========================================
@@ -1270,21 +1296,28 @@ async function loadNotifications() {
     }
 
     list.innerHTML = data.notifications.map(n => `
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);
-                  background:${n.is_read == 0 ? 'rgba(25,195,255,0.06)' : 'transparent'};
-                  cursor:pointer;"
-           onclick="handleNotificationClick('${n.type}')">
-        <div style="font-weight:${n.is_read == 0 ? '600' : '400'};font-size:0.95rem;margin-bottom:4px;">${n.title}</div>
-        <div style="font-size:0.85rem;color:var(--muted);">${n.message}</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">
-          ${new Date(n.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
-        </div>
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+              background:${n.is_read == 0 ? 'rgba(25,195,255,0.06)' : 'transparent'};
+              display:flex;align-items:flex-start;gap:10px;">
+    <div style="flex:1;cursor:pointer;" onclick="handleNotificationClick('${n.type}')">
+      <div style="font-weight:${n.is_read == 0 ? '600' : '400'};font-size:0.95rem;margin-bottom:4px;">${n.title}</div>
+      <div style="font-size:0.85rem;color:var(--muted);">${n.message}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">
+        ${new Date(n.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
       </div>
-    `).join('');
+    </div>
+    <button onclick="deleteNotification(${n.id})" 
+            style="background:none;border:none;cursor:pointer;color:var(--muted);
+                   font-size:1.1rem;padding:0;line-height:1;flex-shrink:0;"
+            title="Delete notification">×</button>
+  </div>
+`).join('');
+
   } catch (error) {
     console.error('Error loading notifications:', error);
   }
 }
+
 
 function toggleNotifications() {
   const dropdown = document.getElementById('notif-dropdown');
@@ -1316,4 +1349,15 @@ function handleNotificationClick(type) {
   markAllRead();
 }
 
-
+async function deleteNotification(id) {
+  try {
+    await fetch('api/delete_notification.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notif_id: id, user_id: user.id })
+    });
+    loadNotifications();
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+  }
+}

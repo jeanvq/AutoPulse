@@ -13,11 +13,12 @@ if (!$user_id) {
     exit;
 }
 
-// Generar notificaciones automáticas
-// 1. Notificación de bienvenida si no existe
-$stmt = $pdo->prepare("SELECT id FROM notifications WHERE user_id = ? AND type = 'welcome'");
+// Generar notificación de bienvenida solo si el usuario no tiene ninguna notificación aún
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM notifications WHERE user_id = ?");
 $stmt->execute([$user_id]);
-if (!$stmt->fetch()) {
+$count = $stmt->fetch()['total'];
+
+if ($count === 0) {
     $pdo->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'Welcome to AutoPulse! 🚗', 'Start by adding your first vehicle using the VIN lookup feature.', 'welcome')")->execute([$user_id]);
 }
 

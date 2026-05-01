@@ -65,7 +65,11 @@
     <div class="notification-wrapper" style="position:relative;">
       <button class="icon-button notification-btn" aria-label="Notifications" onclick="toggleNotifications()">
         <span class="bell">🔔</span>
-        <span class="badge-dot" id="notif-badge" style="display:none;"></span>
+        <span id="notif-badge" style="display:none;position:absolute;top:-6px;right:-6px;
+     background:#e74c3c;color:#fff;font-size:0.7rem;font-weight:700;
+     min-width:18px;height:18px;border-radius:999px;
+     display:none;align-items:center;justify-content:center;
+     padding:0 4px;border:2px solid var(--bg);"></span>
       </button>
       <div id="notif-dropdown" style="display:none;position:fixed;right:8px;top:80px;
            width:320px;background:var(--card);border:1px solid var(--border);
