@@ -307,7 +307,27 @@ async function renderDashboard() {
     console.error(e);
   }
 
-  setText('dash-welcome',       `Welcome back, ${s.ownerName}! Here is your vehicle summary.`);
+  // Storytelling - mensaje dinámico según el estado del vehículo
+const hour = new Date().getHours();
+const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+const now2 = new Date();
+const month2 = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}`;
+const monthlyFuel = fuel.filter(r => r.date.startsWith(month2));
+const hasOverdue = maint.some(r => r.next_date && daysUntil(r.next_date) < 0);
+const hasDueSoon = maint.some(r => r.next_date && daysUntil(r.next_date) <= 14 && daysUntil(r.next_date) >= 0);
+
+let welcomeMsg = '';
+if (hasOverdue) {
+  welcomeMsg = `${greeting}, ${s.ownerName}! ⚠️ Your vehicle has overdue maintenance. Take care of it soon!`;
+} else if (hasDueSoon) {
+  welcomeMsg = `${greeting}, ${s.ownerName}! 🔧 You have maintenance coming up soon. Stay on top of it!`;
+} else if (monthlyFuel.length === 0) {
+  welcomeMsg = `${greeting}, ${s.ownerName}! Don't forget to log your fuel records this month. 📊`;
+} else {
+  welcomeMsg = `${greeting}, ${s.ownerName}! Your ${v.make} ${v.model} is looking great today. 🚗`;
+}
+setText('dash-welcome', welcomeMsg);
   setText('dash-vehicle-title', `${v.make} ${v.model} ${v.year}`);
   setText('dash-plate',         v.plate || '');
   setText('dash-status',        v.status || 'Active');

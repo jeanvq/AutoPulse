@@ -1594,3 +1594,67 @@ body.light-mode .settings-card {
     gap: 16px;
   }
 }
+
+/* ===== MICROINTERACCIONES ===== */
+
+/* Fade in para stat cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Fade in para vehicle cards */
+.vehicle-card-large {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Hover en stat cards */
+.stat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(25,195,255,0.15);
+}
+
+/* Hover en record cards */
+.record-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.record-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(25,195,255,0.12);
+}
+
+/* Pulse en el badge de notificaciones */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+#notif-badge {
+  animation: pulse 2s infinite;
+}
+
+/* Transición suave entre secciones */
+.main-section {
+  animation: fadeInUp 0.35s ease forwards;
+}
