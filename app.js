@@ -1257,6 +1257,7 @@ async function lookupVIN() {
                    : '';
     const fuelType     = getValue('Fuel Type - Primary');
     const transmission = getValue('Transmission Style');
+    const vehicleType   = getValue('Vehicle Type');
 
     // Verificar que encontró datos
     if (!make && !model) {
@@ -1267,11 +1268,23 @@ async function lookupVIN() {
     }
 
     // Llenar el formulario automáticamente
-    document.getElementById('vf-name').value  = `${make} ${model}`;
-    document.getElementById('vf-model').value = model;
-    document.getElementById('vf-year').value  = year;
-    document.getElementById('vf-trim').value  = trim;
+document.getElementById('vf-name').value  = `${make} ${model}`;
+document.getElementById('vf-model').value = model;
+document.getElementById('vf-year').value  = year;
+document.getElementById('vf-trim').value  = trim;
 
+// Mapear tipo de vehículo automáticamente
+if (vehicleType) {
+  const typeMap = {
+    'PASSENGER CAR': 'sedan',
+    'MULTIPURPOSE PASSENGER VEHICLE (MPV)': 'suv',
+    'TRUCK': 'pickup',
+    'VAN': 'van',
+    'BUS': 'van'
+  };
+  const mappedType = typeMap[vehicleType.toUpperCase()] || 'sedan';
+  document.getElementById('vf-type').value = mappedType;
+}
     // Mostrar éxito
     msgDiv.style.display = 'block';
     msgDiv.className = 'auth-message success';
