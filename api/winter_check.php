@@ -77,9 +77,44 @@ if ($temp <= 3) {
     }
 }
 
+// Siempre agregar notificación del clima actual
+$weatherIcon = '';
+$weatherMsg = '';
+
+if ($temp <= -20) {
+    $weatherIcon = '🥶';
+    $weatherMsg = "Extreme cold ({$temp}°C). Use block heater and warm up your car.";
+} elseif ($temp <= -10) {
+    $weatherIcon = '🔋';
+    $weatherMsg = "Very cold ({$temp}°C). Battery performance reduced. Let your car warm up.";
+} elseif ($temp <= 0) {
+    $weatherIcon = '❄️';
+    $weatherMsg = "Freezing ({$temp}°C). Watch for ice on roads and check washer fluid.";
+} elseif ($temp <= 7) {
+    $weatherIcon = '🌨️';
+    $weatherMsg = "Cold weather ({$temp}°C). Check tire pressure for better fuel efficiency.";
+} elseif ($temp <= 15) {
+    $weatherIcon = '🌤️';
+    $weatherMsg = "Cool day ({$temp}°C). Good driving conditions today!";
+} elseif ($temp <= 25) {
+    $weatherIcon = '☀️';
+    $weatherMsg = "Nice weather ({$temp}°C). Great day for a drive!";
+} else {
+    $weatherIcon = '🌡️';
+    $weatherMsg = "Hot day ({$temp}°C). Check coolant level and keep AC maintained.";
+}
+
+// Borrar notificación del clima de hoy y crear una nueva
+$pdo->prepare("DELETE FROM notifications WHERE user_id = ? AND type = 'weather_update' AND DATE(created_at) = CURDATE()")->execute([$user_id]);
+$pdo->prepare("INSERT INTO notifications (user_id, title, message, type, is_read) VALUES (?, ?, ?, 'weather_update', 1)")->execute([
+    $user_id,
+
+    "{$weatherIcon} Weather Update",
+    $weatherMsg
+]);
+
 echo json_encode([
     "success" => true,
     "temperature" => $temp,
     "notifications_added" => $notifications
 ]);
-?>

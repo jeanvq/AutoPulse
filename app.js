@@ -1414,7 +1414,10 @@ async function markAllRead() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: user.id })
     });
-    loadNotifications();
+    // Ocultar badge inmediatamente sin esperar
+    const badge = document.getElementById('notif-badge');
+    if (badge) badge.style.display = 'none';
+    await loadNotifications();
   } catch (error) {
     console.error('Error marking notifications as read:', error);
   }
