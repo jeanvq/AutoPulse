@@ -852,7 +852,7 @@ let fuelChart = null;
 let costChart = null;
 
 async function renderReports() {
-  const v = DB.getActiveVehicle();
+  const v = window.activeVehicle || DB.getActiveVehicle();
   if (!v) return;
 
   let fuel = [];
@@ -864,11 +864,19 @@ async function renderReports() {
     console.error(e);
   }
 
-  const maint = DB.getMaintenanceForVehicle(v.id);
-  const s     = DB.settings;
+  let maint = [];
+  try {
+    const mRes = await fetch(`api/get_maintenance.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const mData = await mRes.json();
+    if (mData.success) maint = mData.records;
+  } catch (e) {
+    console.error(e);
+  }
 
-  setText('report-total-fuel',  fmt(fuel.reduce((sum, r) => sum + r.cost, 0)));
-  setText('report-total-maint', fmt(maint.reduce((sum, r) => sum + r.price, 0)));
+  const s = DB.settings;
+
+  setText('report-total-fuel',  fmt(fuel.reduce((sum, r) => sum + parseFloat(r.cost), 0)));
+  setText('report-total-maint', fmt(maint.reduce((sum, r) => sum + parseFloat(r.price), 0)));
   setText('report-total-dist',  fmtDist(v.mileage));
 
   // Maintenance history table
@@ -892,7 +900,7 @@ async function renderReports() {
         labels: sorted.map(r => r.date.slice(5)),
         datasets: [{
           label: `L/100${s.units}`,
-          data: sorted.map(r => r.consumption),
+          data: sorted.map(r => r.km > 0 ? parseFloat(((parseFloat(r.amount) / parseFloat(r.km)) * 100).toFixed(2)) : 0),
           backgroundColor: 'rgba(25,195,255,0.15)',
           borderColor: '#19c3ff',
           fill: true,
@@ -920,12 +928,12 @@ async function renderReports() {
     fuel.forEach(r => {
       const m = r.date.slice(0, 7);
       if (!months[m]) months[m] = { fuel: 0, maint: 0 };
-      months[m].fuel += r.cost;
+      months[m].fuel += parseFloat(r.cost);
     });
     maint.forEach(r => {
       const m = r.date.slice(0, 7);
       if (!months[m]) months[m] = { fuel: 0, maint: 0 };
-      months[m].maint += r.price;
+      months[m].maint += parseFloat(r.price);
     });
     const keys = Object.keys(months).sort().slice(-8);
     costChart = new Chart(costCtx, {
@@ -950,30 +958,35 @@ async function renderReports() {
 }
 
 // ---- EXPORT CSV ----
-function exportCSV(type) {
-  const v = DB.getActiveVehicle();
+async function exportCSV(type) {
+  const v = window.activeVehicle || DB.getActiveVehicle();
   if (!v) return;
 
-  let csv = '', filename = '';
   const s = DB.settings;
+  let csv = '', filename = '';
 
   if (type === 'fuel') {
+    const fRes = await fetch(`api/get_fuel.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const fData = await fRes.json();
+    const records = fData.success ? fData.records : [];
     csv = `Date,Amount (L),Cost (${s.currency}),Odometer (${s.units}),Station,Consumption (L/100${s.units})\n`;
-    csv += DB.getFuelForVehicle(v.id)
-      .map(r => `${r.date},${r.amount},${r.cost},${r.odometer},${r.station},${r.consumption}`)
-      .join('\n');
-    filename = `${v.name.replace(/\s/g,'_')}_fuel_records.csv`;
+    csv += records.map(r => {
+      const consumption = r.km > 0 ? ((parseFloat(r.amount) / parseFloat(r.km)) * 100).toFixed(2) : '—';
+      return `${r.date},${r.amount},${r.cost},${r.odometer || ''},${r.station || ''},${consumption}`;
+    }).join('\n');
+    filename = `${v.make}_${v.model}_fuel_records.csv`;
   } else {
+    const mRes = await fetch(`api/get_maintenance.php?vehicle_id=${v.id}&user_id=${user.id}`);
+    const mData = await mRes.json();
+    const records = mData.success ? mData.records : [];
     csv = `Date,Type,Price (${s.currency}),Next Date,Notes\n`;
-    csv += DB.getMaintenanceForVehicle(v.id)
-      .map(r => `${r.date},"${r.type}",${r.price},${r.nextDate || ''},"${r.notes || ''}"`)
-      .join('\n');
-    filename = `${v.name.replace(/\s/g,'_')}_maintenance_records.csv`;
+    csv += records.map(r => `${r.date},"${r.type}",${r.price},${r.next_date || ''},"${r.notes || ''}"`).join('\n');
+    filename = `${v.make}_${v.model}_maintenance_records.csv`;
   }
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1036,11 +1049,27 @@ function resetAllData() {
 function initSearch() {
   const inputs = document.querySelectorAll('.search input');
   if (!inputs.length) return;
+  
   inputs.forEach(input => {
-    input.addEventListener('input', function () {
+    // Remover listeners anteriores clonando el elemento
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+    
+    newInput.addEventListener('input', function () {
       const val = this.value.toLowerCase().trim();
-      document.querySelectorAll('.record-card, .vehicle-card-large').forEach(card => {
-        card.style.display = !val || card.textContent.toLowerCase().includes(val) ? '' : 'none';
+      
+      const activeSection = document.querySelector('.main-section:not([style*="display:none"])');
+      if (!activeSection) return;
+
+      const cards = activeSection.querySelectorAll('.record-card, .vehicle-card-large');
+      
+      if (!val) {
+        cards.forEach(card => card.style.display = '');
+        return;
+      }
+
+      cards.forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(val) ? '' : 'none';
       });
     });
   });
@@ -1193,6 +1222,9 @@ document.getElementById('dash-vehicle-select')?.addEventListener('change', async
   // Misc
   initFuelCalculator();
   initSearch();
+document.querySelectorAll('[data-section]').forEach(a => {
+  a.addEventListener('click', () => setTimeout(initSearch, 300));
+});
   initMobileNav();
   initModals();
 
@@ -1351,6 +1383,20 @@ async function setActiveVehicleFromList(id) {
   DB.save();
   await renderMyVehicles();
   showNotification('Active vehicle updated');
+}
+
+function handleSearch(val) {
+  val = val.toLowerCase().trim();
+  
+  // Obtener sección activa desde localStorage
+  const activeName = localStorage.getItem('activeSection') || 'dashboard';
+  const activeSection = document.getElementById(`${activeName}-section`);
+  if (!activeSection) return;
+  
+  const cards = activeSection.querySelectorAll('.record-card, .vehicle-card-large');
+  cards.forEach(card => {
+    card.style.display = !val || card.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
 }
 
   // ==========================================

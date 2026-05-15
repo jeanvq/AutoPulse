@@ -60,9 +60,9 @@
       <span id="theme-icon">🌙</span>
     </button>
     <label class="search">
-      <span>Search</span>
-      <input type="search" placeholder="Search vehicles or records" />
-    </label>
+  <span>Search</span>
+  <input type="search" placeholder="Search vehicles or records" oninput="handleSearch(this.value)" />
+</label>
     <div class="notification-wrapper" style="position:relative;">
       <button class="icon-button notification-btn" aria-label="Notifications" onclick="toggleNotifications()">
         <span class="bell">🔔</span>
