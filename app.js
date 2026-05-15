@@ -436,10 +436,10 @@ async function renderMyVehicles() {
             <span><strong>Category:</strong> ${v.category || '—'}</span>
           </div>
           <div style="margin-top:12px;">
-            ${index === 0
-              ? `<span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">✓ Active vehicle</span>`
-              : `<span style="padding:6px 16px;border-radius:999px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:0.83rem;">Secondary vehicle</span>`
-            }
+            ${v.id === window.activeVehicle?.id
+  ? `<span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">✓ Active vehicle</span>`
+  : `<button class="btn ghost" style="padding:6px 16px;font-size:0.83rem;" onclick="setActiveVehicleFromList(${v.id})">Set as active</button>`
+}
           </div>
         </div>
       </div>`).join('');
@@ -1169,10 +1169,13 @@ async function syncDataWithBackend() {
   });
 
   // Dashboard vehicle selector
-  document.getElementById('dash-vehicle-select')?.addEventListener('change', function () {
-    DB.setActiveVehicle(this.value);
-    renderDashboard();
-  });
+document.getElementById('dash-vehicle-select')?.addEventListener('change', async function () {
+  const selectedId = parseInt(this.value);
+  window.activeVehicle = DB.data.vehicles.find(v => v.id === selectedId) || window.activeVehicle;
+  DB.data.activeVehicleId = selectedId;
+  DB.save();
+  await renderDashboard();
+});
 
   // CRUD forms
   document.getElementById('vehicle-form')?.addEventListener('submit', saveVehicle);
@@ -1340,6 +1343,14 @@ async function checkWinterMode() {
       console.error('Winter mode error:', error);
     }
   });
+}
+
+async function setActiveVehicleFromList(id) {
+  window.activeVehicle = DB.data.vehicles.find(v => v.id === id) || window.activeVehicle;
+  DB.data.activeVehicleId = id;
+  DB.save();
+  await renderMyVehicles();
+  showNotification('Active vehicle updated');
 }
 
   // ==========================================
