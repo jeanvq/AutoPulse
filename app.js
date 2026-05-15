@@ -283,7 +283,7 @@ async function renderDashboard() {
     return;
   }
 
-  updateAllVehicleImages(v.type);
+  updateAllVehicleImages(v.category || v.type);
 
   const s = DB.settings;
   
