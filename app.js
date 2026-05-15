@@ -412,38 +412,38 @@ async function renderMyVehicles() {
       container.innerHTML = emptyState('🚗', 'No vehicles yet', 'Add your first vehicle to start tracking fuel and maintenance.', 'openAddVehicleModal()', '+ Add Vehicle');
       return;
     }
-  
 
-    container.innerHTML = data.vehicles.map(v => `
-  <div class="vehicle-card-large">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-      <div class="vehicle-title">${v.make} ${v.model}</div>
-      <div style="display:flex;gap:8px;flex-shrink:0;">
-        <button class="btn ghost" style="padding:6px 10px;font-size:0.8rem;" onclick="editVehicle('${v.id}')">Edit</button>
-        <button class="btn ghost" style="padding:6px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;" onclick="confirmDeleteVehicle('${v.id}')">Delete</button>
-      </div>
-    </div>
-    <div class="vehicle-meta-clean">
-      <span><strong>Model:</strong> ${v.model}</span>
-      <span><strong>Year:</strong> ${v.year}</span>
-      <span><strong>Trim:</strong> ${v.trim || '—'}</span>
-      <span><strong>Color:</strong> ${v.color || '—'}</span>
-      <span><strong>Mileage:</strong> ${v.mileage ? v.mileage + ' km' : '—'}</span>
-      <span><strong>Category:</strong> ${v.category || '—'}</span>
-      <span><strong>Status:</strong>
-        <span style="color:var(--accent)">Active</span>
-      </span>
-    </div>
-    <div style="margin-top:16px;overflow:hidden;">
-      <img src="${typeToImage(v.category)}" alt="${v.make} ${v.model}"
-           style="width:100%;max-width:380px;max-height:180px;border-radius:14px;object-fit:cover;"
-    </div>
-    <div style="margin-top:14px;">
-      <span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">Active vehicle</span>
-    </div>
-  </div>`).join('');
+    container.innerHTML = data.vehicles.map((v, index) => `
+      <div class="vehicle-card-large" style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex-shrink:0;">
+          <img src="${typeToImage(v.category)}" alt="${v.make} ${v.model}"
+               style="width:220px;height:140px;border-radius:14px;object-fit:cover;display:block;" />
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div class="vehicle-title">${v.make} ${v.model}</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button class="btn ghost" style="padding:6px 10px;font-size:0.8rem;" onclick="editVehicle('${v.id}')">Edit</button>
+              <button class="btn ghost" style="padding:6px 10px;font-size:0.8rem;border-color:#e74c3c;color:#e74c3c;" onclick="confirmDeleteVehicle('${v.id}')">Delete</button>
+            </div>
+          </div>
+          <div class="vehicle-meta-clean">
+            <span><strong>Model:</strong> ${v.model}</span>
+            <span><strong>Year:</strong> ${v.year}</span>
+            <span><strong>Trim:</strong> ${v.trim || '—'}</span>
+            <span><strong>Color:</strong> ${v.color || '—'}</span>
+            <span><strong>Mileage:</strong> ${v.mileage ? v.mileage + ' km' : '—'}</span>
+            <span><strong>Category:</strong> ${v.category || '—'}</span>
+          </div>
+          <div style="margin-top:12px;">
+            ${index === 0
+              ? `<span style="padding:6px 16px;border-radius:999px;background:var(--accent);color:#000;font-size:0.83rem;font-weight:700;">✓ Active vehicle</span>`
+              : `<span style="padding:6px 16px;border-radius:999px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:0.83rem;">Secondary vehicle</span>`
+            }
+          </div>
+        </div>
+      </div>`).join('');
 
- // Guardar primer vehículo como activo
     if (data.vehicles.length > 0) {
       window.activeVehicle = data.vehicles[0];
     }
@@ -451,12 +451,6 @@ async function renderMyVehicles() {
   } catch (error) {
     container.innerHTML = '<p style="color:var(--muted)">❌ Error loading vehicles.</p>';
   }
-}
-
-function setActiveVehicle(id) {
-  DB.setActiveVehicle(id);
-  renderMyVehicles();
-  showNotification('Active vehicle updated');
 }
 
 async function confirmDeleteVehicle(id) {
